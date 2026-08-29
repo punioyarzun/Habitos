@@ -6,12 +6,13 @@
    Uso:  node server.js
    Luego abre http://localhost:8000  (o http://localhost:8000/bitacora.html)
 */
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8000;
-const ROOT = __dirname;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

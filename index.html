@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bitácora — hábitos y gastos</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://rjmftwujvusprlbxtbbg.supabase.co; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -26,7 +26,7 @@
   <div class="brand">
     <h1>Bitácora<span class="dot">.</span></h1>
   </div>
-  <p class="tagline">Registro diario de hábitos y control de gastos — datos guardados localmente en este dispositivo.</p>
+  <p class="tagline">Registro diario de hábitos y control de gastos — con cuenta, tus datos se guardan en la nube y se sincronizan en cualquier dispositivo.</p>
   <nav class="tabs">
     <button data-view="dashboard" class="active">Dashboard</button>
     <button data-view="calendario">Calendario</button>
@@ -192,6 +192,8 @@
 </main>
 
 
+<script src="supabase.config.js"></script>
+<script src="auth.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

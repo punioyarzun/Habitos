@@ -1,5 +1,12 @@
 [build]
   publish = "."
+  functions = "netlify/functions"
+
+# Netlify Functions (backend). Debe ir ANTES del catch-all SPA.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
 
 # SPA fallback: any missing route serves la app
 [[redirects]]
