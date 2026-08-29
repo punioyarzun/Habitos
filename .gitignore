@@ -1,0 +1,11 @@
+# Dependencias (no se usan, por si acaso)
+node_modules/
+
+# Archivos de editor
+.vscode/
+.idea/
+*.suo
+
+# Credenciales / privados
+.env
+*.pem
