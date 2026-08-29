@@ -6,6 +6,6 @@
 // ============================================================================
 window.SUPABASE_CONFIG = {
   url: 'https://rjmftwujvusprlbxtbbg.supabase.co',
-  anonKey: 'TU_ANON_KEY_AQUI', // <-- pega aquí tu "anon public" key
+  anonKey: 'sb_publishable_9G-IMcn5S_ZjbYEQd9FNag_d3VlobCK',
   redirectTo: window.location.origin + window.location.pathname,
 };
