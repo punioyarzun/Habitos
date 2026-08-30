@@ -200,118 +200,138 @@
     window.location.reload();
   }
 
-  // ---------- UI: botón de sesión y modal de login ----------
-  function buildUI() {
-    var header = document.querySelector('.app-header');
-    if (!header) return;
-    var holder = document.createElement('div');
-    holder.className = 'auth-holder';
-    header.appendChild(holder);
+  // ---------- UI: gate de autenticación a pantalla completa ----------
+  // Si no hay sesión, el usuario solo ve el gate (login/registro). El panel
+  // (appShell) queda oculto hasta autenticarse.
 
-    if (session && session.access_token) {
-      var email = (session.user && session.user.email) || '';
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'auth-btn logged';
-      btn.textContent = 'Sesión: ' + (email || 'usuario');
-      btn.title = 'Cerrar sesión';
-      btn.addEventListener('click', signOut);
-      holder.appendChild(btn);
-    } else {
-      var btn2 = document.createElement('button');
-      btn2.type = 'button';
-      btn2.className = 'auth-btn';
-      btn2.textContent = 'Iniciar sesión';
-      btn2.addEventListener('click', openLoginModal);
-      holder.appendChild(btn2);
-    }
+  var GATE = { login: 'login', register: 'register' };
+  var currentMode = GATE.login;
 
-    var tag = document.createElement('div');
-    tag.className = 'auth-mode';
-    tag.textContent = session && session.access_token ? 'Datos en la nube' : 'Datos locales (offline)';
-    holder.appendChild(tag);
+  function escHTML(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
 
-  function openLoginModal() {
-    var ov = document.getElementById('authOverlay');
-    if (!ov) return;
-    ov.classList.add('open');
-    var emailEl = document.getElementById('authEmail');
-    var passEl = document.getElementById('authPass');
+  function showGate() {
+    var gate = document.getElementById('authGate');
+    var shell = document.getElementById('appShell');
+    if (gate) gate.classList.remove('hidden');
+    if (shell) shell.classList.add('hidden');
+    setGateMode(currentMode);
+    wireGate();
+  }
+
+  function showApp() {
+    var gate = document.getElementById('authGate');
+    var shell = document.getElementById('appShell');
+    if (gate) gate.classList.add('hidden');
+    if (shell) shell.classList.remove('hidden');
+    renderAccountPanel();
+  }
+
+  function setGateMode(mode) {
+    currentMode = mode;
+    var loginTab = document.getElementById('authTabLogin');
+    var regTab = document.getElementById('authTabRegister');
+    var confirmLabel = document.querySelector('.auth-label-confirm');
+    var submit = document.getElementById('authSubmit');
     var msg = document.getElementById('authMsg');
-    msg.textContent = '';
-    if (emailEl) emailEl.value = '';
-    if (passEl) passEl.value = '';
-    if (emailEl) emailEl.focus();
+
+    if (loginTab) loginTab.classList.toggle('active', mode === GATE.login);
+    if (regTab) regTab.classList.toggle('active', mode === GATE.register);
+    if (loginTab) loginTab.setAttribute('aria-selected', mode === GATE.login ? 'true' : 'false');
+    if (regTab) regTab.setAttribute('aria-selected', mode === GATE.register ? 'true' : 'false');
+    if (confirmLabel) confirmLabel.style.display = mode === GATE.register ? '' : 'none';
+    if (submit) submit.textContent = mode === GATE.register ? 'Crear cuenta' : 'Entrar';
+    if (msg) { msg.textContent = ''; msg.className = 'auth-msg'; }
+
+    var pass2 = document.getElementById('authPass2');
+    if (pass2) pass2.value = '';
   }
 
-  function closeModal() {
-    var ov = document.getElementById('authOverlay');
-    if (ov) ov.classList.remove('open');
+  function gateField() {
+    var e = document.getElementById('authEmail');
+    var p = document.getElementById('authPass');
+    var p2 = document.getElementById('authPass2');
+    return {
+      email: e ? e.value.trim() : '',
+      password: p ? p.value : '',
+      password2: p2 ? p2.value : '',
+    };
   }
 
-  function showMsg(text, ok) {
+  function gateMessage(text, ok) {
     var msg = document.getElementById('authMsg');
     if (msg) { msg.textContent = text; msg.className = ok ? 'ok' : 'err'; }
   }
 
-  function buildModal() {
-    if (document.getElementById('authOverlay')) return;
-    var d = document.createElement('div');
-    d.className = 'modal-overlay';
-    d.id = 'authOverlay';
-    d.innerHTML =
-      '<div class="modal auth-modal" role="dialog" aria-modal="true">' +
-        '<h2 id="authTitle">Iniciar sesión</h2>' +
-        '<p id="authMsg" class="auth-msg"></p>' +
-        '<label class="auth-label">Email<input type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email"></label>' +
-        '<label class="auth-label">Contraseña<input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password"></label>' +
-        '<div class="auth-row">' +
-          '<button type="button" id="authLogin" class="auth-primary">Entrar</button>' +
-          '<button type="button" id="authRegister" class="auth-secondary">Crear cuenta</button>' +
-        '</div>' +
-        '<div class="auth-social">' +
-          '<span>o continúa con</span>' +
-          '<button type="button" id="authGoogle">Google</button>' +
-          '<button type="button" id="authGithub">GitHub</button>' +
-        '</div>' +
-        '<button type="button" id="authCancel" class="auth-cancel">Cerrar</button>' +
-      '</div>';
-    document.body.appendChild(d);
-    d.addEventListener('click', function (e) { if (e.target === d) closeModal(); });
+  function wireGate() {
+    var loginTab = document.getElementById('authTabLogin');
+    var regTab = document.getElementById('authTabRegister');
+    var submit = document.getElementById('authSubmit');
+    var googleBtn = document.getElementById('authGoogle');
+    var githubBtn = document.getElementById('authGithub');
 
-    function field() {
-      return { email: document.getElementById('authEmail').value.trim(), password: document.getElementById('authPass').value };
-    }
-    document.getElementById('authCancel').addEventListener('click', closeModal);
-    document.getElementById('authLogin').addEventListener('click', function () {
-      var f = field();
-      if (!f.email || !f.password) return showMsg('Ingresa email y contraseña.', false);
-      document.getElementById('authLogin').disabled = true;
-      showMsg('Entrando…', true);
+    if (loginTab) loginTab.addEventListener('click', function () { setGateMode(GATE.login); });
+    if (regTab) regTab.addEventListener('click', function () { setGateMode(GATE.register); });
+
+    if (submit) submit.addEventListener('click', handleSubmit);
+
+    var pass = document.getElementById('authPass');
+    var pass2 = document.getElementById('authPass2');
+    if (pass) pass.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSubmit(); });
+    if (pass2) pass2.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSubmit(); });
+
+    if (googleBtn) googleBtn.addEventListener('click', function () { signInWithProvider('google'); });
+    if (githubBtn) githubBtn.addEventListener('click', function () { signInWithProvider('github'); });
+  }
+
+  function handleSubmit() {
+    var submit = document.getElementById('authSubmit');
+    var f = gateField();
+    if (!f.email || !f.password) return gateMessage('Ingresa tu correo y contraseña.', false);
+
+    function disable(on) { if (submit) submit.disabled = on; }
+
+    if (currentMode === GATE.login) {
+      disable(true);
+      gateMessage('Entrando…', true);
       signIn(f.email, f.password).then(function (j) {
-        if (j.access_token) { afterAuth(); }
-        else showMsg((j.msg) || 'Revisa tu email para confirmar la cuenta.', false);
-      }).catch(function (e) {
-        showMsg(e.message, false);
-        document.getElementById('authLogin').disabled = false;
-      });
-    });
-    document.getElementById('authRegister').addEventListener('click', function () {
-      var f = field();
-      if (!f.email || !f.password) return showMsg('Ingresa email y contraseña.', false);
-      if (f.password.length < 6) return showMsg('La contraseña debe tener al menos 6 caracteres.', false);
-      document.getElementById('authRegister').disabled = true;
-      signUp(f.email, f.password).then(function () {
+        if (j.access_token) afterAuth();
+        else gateMessage((j.msg) || 'Revisa tu email para confirmar la cuenta.', false);
+        disable(false);
+      }).catch(function (e) { gateMessage(e.message, false); disable(false); });
+    } else {
+      if (f.password.length < 6) return gateMessage('La contraseña debe tener al menos 6 caracteres.', false);
+      if (f.password !== f.password2) return gateMessage('Las contraseñas no coinciden.', false);
+      disable(true);
+      gateMessage('Creando tu cuenta…', true);
+      signUp(f.email, f.password).then(function (j) {
         if (session && session.access_token) afterAuth();
-        else showMsg('Cuenta creada. Revisa tu email para confirmar.', true);
-      }).catch(function (e) {
-        showMsg(e.message, false);
-        document.getElementById('authRegister').disabled = false;
-      });
-    });
-    document.getElementById('authGoogle').addEventListener('click', function () { signInWithProvider('google'); });
-    document.getElementById('authGithub').addEventListener('click', function () { signInWithProvider('github'); });
+        else gateMessage('Cuenta creada. Revisa tu email para confirmar.', true);
+        disable(false);
+      }).catch(function (e) { gateMessage(e.message, false); disable(false); });
+    }
+  }
+
+  // ---------- UI: pestaña "Cuenta" del panel (solo con sesión) ----------
+  function renderAccountPanel() {
+    var state = document.getElementById('authState');
+    if (!state) return;
+    if (!session || !session.access_token) {
+      state.innerHTML = '';
+      return;
+    }
+    var email = (session.user && session.user.email) || 'usuario';
+    state.innerHTML =
+      '<div class="auth-account">' +
+        '<div class="auth-account-email">' + escHTML(email) + '</div>' +
+        '<div class="auth-account-mode">Datos en la nube</div>' +
+        '<button type="button" id="authLogout" class="auth-logout">Cerrar sesión</button>' +
+      '</div>';
+    var logout = document.getElementById('authLogout');
+    if (logout) logout.addEventListener('click', signOut);
   }
 
   // ---------- post-login: marcar backend y sembrar datos locales ----------
@@ -342,9 +362,12 @@
     if (!URL || !ANON || ANON.indexOf('TU_ANON') !== -1) {
       console.warn('Bitácora: configura supabase.config.js (URL + anon key) para activar cuentas.');
     }
-    buildModal();
-    buildUI();
-    verifyAndSeed();
+    if (session && session.access_token) {
+      showApp();
+      verifyAndSeed();
+    } else {
+      showGate();
+    }
   }
 
   // Verifica el token y, si el backend está vacío, siembra los datos locales.
@@ -379,5 +402,6 @@
     isLoggedIn: function () { return !!(session && session.access_token); },
     getUser: function () { return session ? session.user : null; },
     backendReady: function () { return backendReady; },
+    renderPanel: function () { renderAccountPanel(); },
   };
 })();

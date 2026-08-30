@@ -33,29 +33,37 @@ if (!URL || !ANON || !SERVICE) {
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
 
 function respond(statusCode, obj, extraHeaders = {}) {
-  return {
-    statusCode,
+  return new Response(JSON.stringify(obj), {
+    status: statusCode,
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
       ...extraHeaders,
     },
-    body: JSON.stringify(obj),
-  };
+  });
 }
 
-function readAuthToken(event) {
-  const auth = (event.headers.authorization || event.headers.Authorization || '');
-  if (auth.startsWith('Bearer ')) return auth.slice(7);
+function readAuthToken(headers) {
+  const auth = (headers.get ? headers.get('authorization') : null)
+    || (headers.authorization || headers.Authorization || '');
+  if (auth && auth.startsWith('Bearer ')) return auth.slice(7);
   return null;
 }
 
-export default async function handler(event, context) {
-  if (event.httpMethod !== 'POST') {
+export default async function handler(input, context) {
+  // Compatibilidad: runtime v2 pasa un objeto Request (Web API); v1 pasa el event.
+  const isRequest = typeof input !== 'undefined' && typeof input.json === 'function' && typeof input.method === 'string';
+  const method = isRequest ? input.method : input.httpMethod;
+  const headers = isRequest ? input.headers : (input.headers || {});
+  const rawBody = isRequest
+    ? await input.text().catch(() => '')
+    : (input.body || '');
+
+  if (method !== 'POST') {
     return respond(405, { error: 'method_not_allowed' });
   }
 
-  const token = readAuthToken(event);
+  const token = readAuthToken(headers);
   if (!token) return respond(401, { error: 'missing_token' });
 
   // 1) Validar el JWT y obtener el user_id
@@ -72,7 +80,7 @@ export default async function handler(event, context) {
 
   // 2) Parsear el body
   let body;
-  try { body = event.body ? JSON.parse(event.body) : {}; }
+  try { body = rawBody ? JSON.parse(rawBody) : {}; }
   catch (e) { return respond(400, { error: 'invalid_json' }); }
 
   const { action, key, value } = body || {};

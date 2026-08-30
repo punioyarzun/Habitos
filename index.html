@@ -9,6 +9,55 @@
 </head>
 <body>
 
+<!-- ===================== GATE DE AUTENTICACIÓN ===================== -->
+<div id="authGate" class="auth-gate" aria-hidden="true">
+  <div class="auth-gate-bg"></div>
+  <div class="auth-gate-inner">
+
+    <div class="auth-gate-brand">
+      <h1>Bitácora<span class="dot">.</span></h1>
+      <p>Hábitos y control de gastos, sincronizados en la nube.</p>
+    </div>
+
+    <div class="auth-card" id="authCard">
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" id="authTabLogin" role="tab" aria-selected="true">Iniciar sesión</button>
+        <button type="button" class="auth-tab" id="authTabRegister" role="tab" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <div class="auth-form" id="authForm">
+        <div id="authMsg" class="auth-msg" role="status"></div>
+
+        <label class="auth-label" for="authEmail">Correo electrónico
+          <input type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email">
+        </label>
+
+        <label class="auth-label" for="authPass">Contraseña
+          <input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password">
+        </label>
+
+        <label class="auth-label auth-label-confirm" for="authPass2" style="display:none;">Confirmar contraseña
+          <input type="password" id="authPass2" placeholder="••••••••" autocomplete="new-password">
+        </label>
+
+        <button type="button" class="auth-submit" id="authSubmit">Entrar</button>
+
+        <div class="auth-divider"><span>o continúa con</span></div>
+
+        <div class="auth-social">
+          <button type="button" class="auth-social-btn auth-google" id="authGoogle">Google</button>
+          <button type="button" class="auth-social-btn auth-github" id="authGithub">GitHub</button>
+        </div>
+      </div>
+
+      <p class="auth-foot">Tus datos se guardan en la nube y se pueden sincronizar entre dispositivos.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<div id="appShell" class="app-shell hidden" aria-hidden="true">
 
 <div id="loading" class="loading-overlay">cargando bitácora…</div>
 <div id="syncToast" class="sync-toast"></div>
@@ -32,6 +81,7 @@
     <button data-view="calendario">Calendario</button>
     <button data-view="gastos">Gastos</button>
     <button data-view="datos">Datos</button>
+    <button data-view="cuenta">Cuenta</button>
   </nav>
 </header>
 
@@ -189,8 +239,19 @@
     </div>
   </section>
 
+  <!-- ===================== CUENTA ===================== -->
+  <section id="view-cuenta" class="view">
+    <div class="card auth-panel" id="authPanel">
+      <div class="auth-panel-inner">
+        <h2 class="auth-panel-title">Tu cuenta</h2>
+        <div id="authState"></div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
+</div><!-- /#appShell -->
 
 <script src="supabase.config.js"></script>
 <script src="auth.js"></script>

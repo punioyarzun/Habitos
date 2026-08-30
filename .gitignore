@@ -9,3 +9,6 @@ node_modules/
 # Credenciales / privados
 .env
 *.pem
+
+# Local Netlify folder
+.netlify

@@ -467,28 +467,47 @@ function renderChain(key, n){
 /* ---------------------------------------------------------------
    Render: dashboard
 --------------------------------------------------------------- */
+function getHabitByKey(key){
+  return habitsConfig.find(h => h.key === key) || null;
+}
+
+function refreshAllViews(options = {}){
+  const { keepCategoryModal = false } = options;
+  renderDashboard();
+  renderCalendar();
+  renderFinance();
+  renderReorderList();
+  if (!keepCategoryModal) renderCatManagerModal();
+}
+
 function renderDashboard(){
-  document.getElementById('tipText').textContent = pickDailyTip();
+  const tipText = document.getElementById('tipText');
+  if (tipText) tipText.textContent = pickDailyTip();
 
   // hero: usa el hábito destacado configurable
-  const heroHabit = habitsConfig.find(h => h.key === featuredHabitKey) || habitsConfig[0] || null;
+  const heroHabit = getHabitByKey(featuredHabitKey) || habitsConfig[0] || null;
   const heroCard = document.querySelector('.hero');
   const heroSelect = document.getElementById('heroHabitSelect');
-  if(heroHabit){
+  if (heroHabit && heroCard && heroSelect) {
     heroCard.style.display = 'flex';
-    document.getElementById('heroDays').textContent = currentStreak(heroHabit.key);
-    document.getElementById('heroDays').style.color = heroHabit.color;
-    document.getElementById('heroTitle').textContent = `días consecutivos — ${heroHabit.label}`;
+    const heroDays = document.getElementById('heroDays');
+    const heroTitle = document.getElementById('heroTitle');
+    if (heroDays) {
+      heroDays.textContent = currentStreak(heroHabit.key);
+      heroDays.style.color = heroHabit.color;
+    }
+    if (heroTitle) heroTitle.textContent = `días consecutivos — ${heroHabit.label}`;
     heroSelect.innerHTML = habitsConfig.map(h => `
       <option value="${esc(h.key)}" ${h.key===heroHabit.key?'selected':''}>${esc(h.label)}</option>
     `).join('');
     heroSelect.style.display = '';
-  } else {
+  } else if (heroCard && heroSelect) {
     heroCard.style.display = 'none';
     heroSelect.style.display = 'none';
   }
 
   const grid = document.getElementById('habitGrid');
+  if (!grid) return;
   grid.innerHTML = habitsConfig.map(h => {
     const pct = adherencePct(h.key);
     const trend = trendSeries(h.key);
@@ -543,7 +562,7 @@ function renderDashboard(){
   });
   document.querySelectorAll('.icon-btn[data-key]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const h = habitsConfig.find(x=>x.key===btn.dataset.key);
+      const h = getHabitByKey(btn.dataset.key);
       if(!h) return;
       openConfirmModal(
         `¿Quitar "${h.label}"?`,
@@ -563,23 +582,31 @@ function renderDashboard(){
   const addCard = document.getElementById('openAddHabit');
   if(addCard) addCard.addEventListener('click', openAddHabitForm);
 
-  heroSelect.onchange = async ()=>{
-    featuredHabitKey = heroSelect.value;
-    await saveFeatured();
-    renderDashboard();
-  };
+  if (heroSelect) {
+    heroSelect.onchange = async ()=>{
+      featuredHabitKey = heroSelect.value;
+      await saveFeatured();
+      renderDashboard();
+    };
+  }
 
-  document.getElementById('todayLbl').textContent =
-    new Date().toLocaleDateString('es-CL', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const todayLabel = document.getElementById('todayLbl');
+  if (todayLabel) {
+    todayLabel.textContent = new Date().toLocaleDateString('es-CL', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  }
 
   const today = todayIso();
   const todayData = habitDays[today] || {};
-  document.getElementById('todayToggles').innerHTML = habitsConfig.map(h => `
-    <button class="toggle-btn ${todayData[h.key] ? 'on':''}" data-key="${esc(h.key)}" style="--btn-color:${isValidColor(h.color)?h.color:'var(--text-muted)'}" aria-pressed="${todayData[h.key] ? 'true':'false'}">
-      ${sanitizeIcon(h.icon)} ${esc(h.label)}
-    </button>
-  `).join('');
-  document.getElementById('todayNota').value = todayData.nota || '';
+  const todayToggles = document.getElementById('todayToggles');
+  if (todayToggles) {
+    todayToggles.innerHTML = habitsConfig.map(h => `
+      <button class="toggle-btn ${todayData[h.key] ? 'on':''}" data-key="${esc(h.key)}" style="--btn-color:${isValidColor(h.color)?h.color:'var(--text-muted)'}" aria-pressed="${todayData[h.key] ? 'true':'false'}">
+        ${sanitizeIcon(h.icon)} ${esc(h.label)}
+      </button>
+    `).join('');
+  }
+  const todayNota = document.getElementById('todayNota');
+  if (todayNota) todayNota.value = todayData.nota || '';
 
   document.querySelectorAll('#todayToggles .toggle-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -964,9 +991,12 @@ document.getElementById('saveToday').addEventListener('click', async ()=>{
    Render: calendar
 --------------------------------------------------------------- */
 function renderCalendar(){
-  document.getElementById('calDow').innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  document.getElementById('calTitle').textContent =
-    `${MONTHS[calDate.getMonth()]} ${calDate.getFullYear()}`;
+  const calDow = document.getElementById('calDow');
+  const calTitle = document.getElementById('calTitle');
+  const calGrid = document.getElementById('calGrid');
+  if (calDow) calDow.innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  if (calTitle) calTitle.textContent = `${MONTHS[calDate.getMonth()]} ${calDate.getFullYear()}`;
+  if (!calGrid) return;
 
   const year = calDate.getFullYear(), month = calDate.getMonth();
   const firstDay = new Date(year, month, 1);
@@ -1140,6 +1170,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     btn.classList.add('active');
     document.getElementById('view-'+btn.dataset.view).classList.add('active');
     if(btn.dataset.view === 'datos') renderReorderList();
+    if(btn.dataset.view === 'cuenta' && window.BitacoraAuth && window.BitacoraAuth.renderPanel) window.BitacoraAuth.renderPanel();
   });
 });
 
@@ -1148,13 +1179,16 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 --------------------------------------------------------------- */
 async function init(){
   await loadData();
-  document.getElementById('txDate').value = todayIso();
-  document.getElementById('monthPicker').value = currentYearMonth();
+  const txDate = document.getElementById('txDate');
+  const monthPicker = document.getElementById('monthPicker');
+  if (txDate) txDate.value = todayIso();
+  if (monthPicker) monthPicker.value = currentYearMonth();
   populateCategorySelect();
   renderDashboard();
   renderCalendar();
   renderFinance();
   renderReorderList();
-  document.getElementById('loading').style.display = 'none';
+  const loading = document.getElementById('loading');
+  if (loading) loading.style.display = 'none';
 }
 init();
