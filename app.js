@@ -50,7 +50,7 @@ let editingIcon = ICON_CUSTOM;
 let editingColor = SWATCH_COLORS[0];
 
 function emptyDay(){
-  const o = {nota:''};
+  const o = {nota:'', mood:'', focus:'', help:'', block:''};
   habitsConfig.forEach(h => o[h.key] = false);
   return o;
 }
@@ -497,9 +497,60 @@ function refreshAllViews(options = {}){
   if (!keepCategoryModal) renderCatManagerModal();
 }
 
+function getWeeklyCompletionRate(){
+  if (habitsConfig.length === 0) return { value: 0, label: 'Sin hábitos todavía' };
+
+  const today = new Date();
+  let totalChecks = 0;
+  let completedChecks = 0;
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const iso = toIso(date);
+    const data = habitDays[iso] || {};
+    for (const habit of habitsConfig) {
+      totalChecks += 1;
+      if (data[habit.key]) completedChecks += 1;
+    }
+  }
+
+  const pct = totalChecks === 0 ? 0 : Math.round((completedChecks / totalChecks) * 100);
+  let label = 'Tu constancia está por empezar.';
+  if (pct >= 80) label = 'Muy buena racha esta semana.';
+  else if (pct >= 55) label = 'Va bien, sigue con constancia.';
+  else if (pct >= 30) label = 'Estás construyendo momentum.';
+  return { value: pct, label };
+}
+
+function getAchievementSnapshot(){
+  const total = habitsConfig.length ? habitsConfig.reduce((sum, habit) => sum + currentStreak(habit.key), 0) : 0;
+  const best = habitsConfig.length ? Math.max(...habitsConfig.map(h => bestStreak(h.key))) : 0;
+  if (best >= 14) return { value: best, label: 'Racha sólida de dos semanas' };
+  if (best >= 7) return { value: best, label: 'Ya tienes una semana fuerte' };
+  if (total > 0) return { value: total, label: 'Tus hábitos están prendiendo' };
+  return { value: 0, label: 'Sigue cuidando tu racha' };
+}
+
+function renderInsights(){
+  const weekly = getWeeklyCompletionRate();
+  const achievement = getAchievementSnapshot();
+
+  const weeklyValue = document.getElementById('weeklySummaryValue');
+  const weeklySub = document.getElementById('weeklySummarySub');
+  if (weeklyValue) weeklyValue.textContent = `${weekly.value}%`;
+  if (weeklySub) weeklySub.textContent = weekly.label;
+
+  const achievementValue = document.getElementById('achievementValue');
+  const achievementSub = document.getElementById('achievementSub');
+  if (achievementValue) achievementValue.textContent = String(achievement.value);
+  if (achievementSub) achievementSub.textContent = achievement.label;
+}
+
 function renderDashboard(){
   const tipText = document.getElementById('tipText');
   if (tipText) tipText.textContent = pickDailyTip();
+  renderInsights();
 
   // hero: usa el hábito destacado configurable
   const heroHabit = getHabitByKey(featuredHabitKey) || habitsConfig[0] || null;
@@ -623,7 +674,15 @@ function renderDashboard(){
     `).join('');
   }
   const todayNota = document.getElementById('todayNota');
+  const todayMood = document.getElementById('todayMood');
+  const todayFocus = document.getElementById('todayFocus');
+  const todayHelp = document.getElementById('todayHelp');
+  const todayBlock = document.getElementById('todayBlock');
   if (todayNota) todayNota.value = todayData.nota || '';
+  if (todayMood) todayMood.value = todayData.mood || '';
+  if (todayFocus) todayFocus.value = todayData.focus || '';
+  if (todayHelp) todayHelp.value = todayData.help || '';
+  if (todayBlock) todayBlock.value = todayData.block || '';
 
   document.querySelectorAll('#todayToggles .toggle-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -999,7 +1058,12 @@ document.getElementById('newHabitAdd').addEventListener('click', async ()=>{
 document.getElementById('saveToday').addEventListener('click', async ()=>{
   const today = todayIso();
   if(!habitDays[today]) habitDays[today] = emptyDay();
-  habitDays[today].nota = cleanFreeText(document.getElementById('todayNota').value, MAX_NOTE);
+  const day = habitDays[today];
+  day.nota = cleanFreeText(document.getElementById('todayNota').value, MAX_NOTE);
+  day.mood = cleanFreeText(document.getElementById('todayMood').value, 40);
+  day.focus = cleanFreeText(document.getElementById('todayFocus').value, 40);
+  day.help = cleanFreeText(document.getElementById('todayHelp').value, 200);
+  day.block = cleanFreeText(document.getElementById('todayBlock').value, 200);
   await saveHabits();
   renderDashboard();
   renderCalendar();
@@ -1178,6 +1242,28 @@ document.getElementById('txAdd').addEventListener('click', async ()=>{
 
 document.getElementById('monthPicker').addEventListener('change', renderFinance);
 
+function initPwaInstall(){
+  const btn = document.getElementById('pwaInstallBtn');
+  if (!btn || !('BeforeInstallPromptEvent' in window)) return;
+
+  let deferredPrompt = null;
+  const showButton = () => btn.classList.remove('hidden');
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    showButton();
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    btn.classList.add('hidden');
+  });
+}
+
 /* ---------------------------------------------------------------
    Tabs
 --------------------------------------------------------------- */
@@ -1202,6 +1288,7 @@ async function init(){
   if (txDate) txDate.value = todayIso();
   if (monthPicker) monthPicker.value = currentYearMonth();
   populateCategorySelect();
+  initPwaInstall();
   renderDashboard();
   renderCalendar();
   renderFinance();

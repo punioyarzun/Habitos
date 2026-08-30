@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Bitácora icon">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#5b9bd9"/>
+      <stop offset="100%" stop-color="#e8b93d"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#10151a"/>
+  <rect x="12" y="12" width="104" height="104" rx="24" fill="url(#bg)" opacity="0.12"/>
+  <path d="M42 90V40h22c15 0 24 9 24 22 0 13-9 22-24 22H42Zm18-14h4c7 0 12-4 12-10 0-6-5-10-12-10h-4v20Z" fill="#e9eef2"/>
+  <path d="M80 40h14l12 14-12 14H80V40Z" fill="#e8b93d"/>
+</svg>

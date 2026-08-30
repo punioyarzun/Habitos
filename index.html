@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bitácora — hábitos y gastos</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://rjmftwujvusprlbxtbbg.supabase.co; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<meta name="theme-color" content="#10151a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -75,6 +79,9 @@
   <div class="brand">
     <h1>Bitácora<span class="dot">.</span></h1>
   </div>
+  <div class="header-actions">
+    <button type="button" id="pwaInstallBtn" class="install-btn hidden">Instalar app</button>
+  </div>
   <p class="tagline">Registro diario de hábitos y control de gastos — con cuenta, tus datos se guardan en la nube y se sincronizan en cualquier dispositivo.</p>
   <nav class="tabs">
     <button data-view="dashboard" class="active">Dashboard</button>
@@ -98,6 +105,19 @@
           <span class="cat-group-label" style="font-size:11px;">Hábito destacado:</span>
           <select id="heroHabitSelect" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-family:'Inter';font-size:12px;"></select>
         </div>
+      </div>
+    </div>
+
+    <div class="insight-grid">
+      <div class="mini-card" id="weeklySummaryCard">
+        <div class="mini-label">Resumen semanal</div>
+        <div class="mini-value" id="weeklySummaryValue">0%</div>
+        <div class="mini-sub" id="weeklySummarySub">Tu constancia está por empezar.</div>
+      </div>
+      <div class="mini-card" id="achievementCard">
+        <div class="mini-label">Logro</div>
+        <div class="mini-value" id="achievementValue">0</div>
+        <div class="mini-sub" id="achievementSub">Sigue cuidando tu racha.</div>
       </div>
     </div>
 
@@ -144,6 +164,37 @@
       <h2>Hoy</h2>
       <div class="date-lbl" id="todayLbl"></div>
       <div class="toggle-row" id="todayToggles"></div>
+      <div class="reflection-row">
+        <div class="field compact">
+          <label>Estado</label>
+          <select id="todayMood">
+            <option value="">Selecciona</option>
+            <option value="muy bien">Muy bien</option>
+            <option value="bien">Bien</option>
+            <option value="regular">Regular</option>
+            <option value="bajo">Bajo</option>
+          </select>
+        </div>
+        <div class="field compact">
+          <label>Foco</label>
+          <select id="todayFocus">
+            <option value="">Selecciona</option>
+            <option value="salud">Salud</option>
+            <option value="foco">Foco</option>
+            <option value="productividad">Productividad</option>
+            <option value="calma">Calma</option>
+            <option value="finanzas">Finanzas</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-top:8px;">
+        <label>¿Qué te ayudó hoy?</label>
+        <input type="text" id="todayHelp" maxlength="200" placeholder="Ritual, apoyo, caminata, descanso...">
+      </div>
+      <div class="field" style="margin-top:8px;">
+        <label>¿Qué te bloqueó?</label>
+        <input type="text" id="todayBlock" maxlength="200" placeholder="Estrés, cansancio, procrastinación, etc.">
+      </div>
       <textarea class="nota" id="todayNota" maxlength="2000" placeholder="Nota del día (opcional): cómo te sentiste, qué hiciste de ejercicio, en qué programaste…"></textarea>
       <div style="margin-top:10px;">
         <button class="save-btn" id="saveToday">Guardar día</button>
@@ -256,5 +307,12 @@
 <script src="supabase.config.js"></script>
 <script src="auth.js"></script>
 <script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>
