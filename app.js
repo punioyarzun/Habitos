@@ -552,7 +552,6 @@ function renderDashboard(){
   if (tipText) tipText.textContent = pickDailyTip();
   renderInsights();
 
-  // hero: usa el hábito destacado configurable
   const heroHabit = getHabitByKey(featuredHabitKey) || habitsConfig[0] || null;
   const heroCard = document.querySelector('.hero');
   const heroSelect = document.getElementById('heroHabitSelect');
@@ -576,6 +575,25 @@ function renderDashboard(){
 
   const grid = document.getElementById('habitGrid');
   if (!grid) return;
+
+  if (habitsConfig.length === 0) {
+    grid.innerHTML = `
+      <div class="card" style="grid-column: 1 / -1; border-style: dashed; background: transparent;">
+        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:10px;">
+          <div class="mini-label">Tu primer hábito</div>
+          <h3 style="margin:0; font-family:'Space Grotesk'; font-size:20px;">Aún no tienes hábitos activos</h3>
+          <p style="margin:0; color:var(--text-muted); line-height:1.6;">
+            Define tu primer hábito para empezar a medir tu constancia, reforzar tu racha y construir una rutina más clara.
+          </p>
+          <button class="save-btn" id="emptyHabitCta">Crear mi primer hábito</button>
+        </div>
+      </div>
+    `;
+    const cta = document.getElementById('emptyHabitCta');
+    if (cta) cta.addEventListener('click', openAddHabitForm);
+    return;
+  }
+
   grid.innerHTML = habitsConfig.map(h => {
     const pct = adherencePct(h.key);
     const trend = trendSeries(h.key);
@@ -996,6 +1014,7 @@ function habitLabelExists(label){
 
 function renderCatChips(containerId, presets){
   const el = document.getElementById(containerId);
+  if (!el) return;
   el.innerHTML = presets.map(p => {
     const already = habitLabelExists(p.label);
     return `
@@ -1006,7 +1025,7 @@ function renderCatChips(containerId, presets){
   el.querySelectorAll('.cat-chip').forEach((chip, i) => {
     if(chip.classList.contains('disabled')) return;
     chip.addEventListener('click', () => {
-      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
+      el.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
       chip.classList.add('selected');
       document.getElementById('newHabitLabel').value = presets[i].label;
       newHabitColor = presets[i].color;
