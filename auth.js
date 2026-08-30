@@ -335,14 +335,29 @@
   }
 
   // ---------- post-login: marcar backend y sembrar datos locales ----------
+  function storageKeyForUser(key) {
+    if (!session || !session.user || !session.user.id) return key;
+    return 'bitacora:user:' + session.user.id + ':' + key;
+  }
+
+  function readLocalValue(key) {
+    var candidates = [key, storageKeyForUser(key)];
+    for (var i = 0; i < candidates.length; i++) {
+      try {
+        var value = localStorage.getItem(candidates[i]);
+        if (value != null) return value;
+      } catch (e) {}
+    }
+    return null;
+  }
+
   function seedLocalOnFirstLogin() {
     return getBlob().then(function (map) {
       var hadAny = map && Object.keys(map).length > 0;
       if (hadAny) return;
       var todo = [];
       APP_KEYS.forEach(function (k) {
-        var v = null;
-        try { v = localStorage.getItem(k); } catch (e) {}
+        var v = readLocalValue(k);
         if (v != null) todo.push(doApi('save', { key: k, value: v }, false));
       });
       return Promise.all(todo).then(function () { return true; });

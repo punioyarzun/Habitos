@@ -215,9 +215,26 @@ let selectedDayIso = null;
    guardan en ambos para que sobrevivan a cambios de plataforma.
    Si la API externa no existe, localStorage funciona igual.
 --------------------------------------------------------------- */
-function lsGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
-function lsSet(key, val){ try{ localStorage.setItem(key, val); return true; }catch(e){ return false; } }
-function lsRemove(key){ try{ localStorage.removeItem(key); }catch(e){} }
+function getActiveUserId(){
+  try {
+    const auth = window.BitacoraAuth;
+    if (auth && typeof auth.getUser === 'function') {
+      const user = auth.getUser();
+      if (user && user.id) return user.id;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function getScopedStorageKey(key){
+  const userId = getActiveUserId();
+  const safeKey = String(key || '');
+  return userId ? `bitacora:user:${userId}:${safeKey}` : `bitacora:${safeKey}`;
+}
+
+function lsGet(key){ try{ return localStorage.getItem(getScopedStorageKey(key)); }catch(e){ return null; } }
+function lsSet(key, val){ try{ localStorage.setItem(getScopedStorageKey(key), val); return true; }catch(e){ return false; } }
+function lsRemove(key){ try{ localStorage.removeItem(getScopedStorageKey(key)); }catch(e){} }
 
 function externalStoreAvailable(){
   return !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function');
@@ -837,6 +854,7 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
       ['habits:config','habits:days','finance:transactions','app:featured','finance:cats_ingreso','finance:cats_gasto'].forEach(k=>{
         if(externalStoreAvailable()){ withRetry(()=>window.storage.remove && window.storage.remove(k),1).catch(()=>{}); }
         lsRemove(k);
+        try { localStorage.removeItem(k); } catch (e) {}
       });
       renderDashboard(); renderCalendar(); renderFinance(); renderReorderList(); renderCatManagerModal();
       document.getElementById('monthPicker').value = currentYearMonth();
