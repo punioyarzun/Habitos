@@ -5,6 +5,19 @@ Aplicación web para registrar hábitos, notas, ingresos y gastos, con **cuentas
 - Sin sesión: funciona en modo local con `localStorage` (como antes).
 - Con sesión: tus datos se guardan en la nube (Supabase) vía una Netlify Function y se **sincronizan en cualquier dispositivo**.
 - Login por **email + contraseña** y por **Google/GitHub** (OAuth).
+- Interfaz **SaaS**: sidebar en escritorio y barra de navegación inferior en móvil.
+- Sección **Estadísticas** con análisis de constancia (hábitos) y finanzas (ingresos/gastos por categoría) filtrable por semana/mes/año.
+
+## Secciones
+
+| Sección | Qué ofrece |
+|---------|------------|
+| **Dashboard** | Racha principal, hábitos del día, resumen semanal y logro, tip diario. |
+| **Calendario** | Mapa mensual de cumplimiento y edición por día. |
+| **Gastos** | Control mensual de ingresos/gastos, balance y categorías. |
+| **Estadísticas** | Evolución de hábitos (adherencia, racha actual/mejor) y finanzas por rango. |
+| **Datos** | Exportar/importar copia de seguridad y orden de hábitos. |
+| **Cuenta** | Correo, estado de sincronización y cierre de sesión. |
 
 ## Estructura
 
@@ -21,6 +34,7 @@ Aplicación web para registrar hábitos, notas, ingresos y gastos, con **cuentas
 | `server.js` | Servidor local de desarrollo, puerto 8000. |
 | `netlify.toml` | Config Netlify (funciones, SPA, cabeceras seguras). |
 | `404.html` / `_headers` | Fallback SPA y cabeceras para hosts estáticos. |
+| `icon.svg` / `assets/` | Identidad visual (logo/favicon SVG). |
 
 ## Configuración del backend (una vez)
 

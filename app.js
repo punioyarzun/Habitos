@@ -488,15 +488,6 @@ function getHabitByKey(key){
   return habitsConfig.find(h => h.key === key) || null;
 }
 
-function refreshAllViews(options = {}){
-  const { keepCategoryModal = false } = options;
-  renderDashboard();
-  renderCalendar();
-  renderFinance();
-  renderReorderList();
-  if (!keepCategoryModal) renderCatManagerModal();
-}
-
 function getWeeklyCompletionRate(){
   if (habitsConfig.length === 0) return { value: 0, label: 'Sin hábitos todavía' };
 
@@ -1286,17 +1277,175 @@ function initPwaInstall(){
 }
 
 /* ---------------------------------------------------------------
-   Tabs
+   Estadísticas
 --------------------------------------------------------------- */
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
+let statsRange = 'week';
+
+function addDaysISO(iso, n){
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return toIso(d);
+}
+
+function statsStartISO(){
+  const t = new Date();
+  if(statsRange === 'week'){
+    const d = new Date(t);
+    const dow = (d.getDay() + 6) % 7; // lunes = 0
+    d.setDate(d.getDate() - dow);
+    return toIso(d);
+  }
+  if(statsRange === 'month') return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-01';
+  return t.getFullYear() + '-01-01';
+}
+
+// Racha actual (días seguidos con el hábito marcado, contando desde hoy hacia atrás,
+// sin exigir usar PERFECT) y mejor racha histórica.
+function habitStreak(key, startISO){
+  const today = todayIso();
+  let current = 0;
+  let cursor = today;
+  while(cursor >= startISO){
+    const data = habitDays[cursor] || {};
+    if(data[key]){ current++; cursor = addDaysISO(cursor, -1); }
+    else break;
+  }
+  let best = 0, run = 0;
+  const seen = new Set();
+  let d = today;
+  while(d >= startISO){
+    if(seen.has(d)) break;
+    seen.add(d);
+    const data = habitDays[d] || {};
+    if(data[key]){ run++; if(run>best) best=run; }
+    else run = 0;
+    d = addDaysISO(d, -1);
+  }
+  return { current, best };
+}
+
+function habitsInRange(){
+  const startISO = statsStartISO();
+  const today = todayIso();
+  const days = [];
+  let cur = startISO, guard = 0;
+  while(cur <= today && guard < 1600){ days.push(cur); cur = addDaysISO(cur, 1); guard++; }
+  return { startISO, days };
+}
+
+function renderStats(){
+  const body = document.getElementById('statsBody');
+  const empty = document.getElementById('statsEmpty');
+  if(!body) return;
+
+  const { startISO, days } = habitsInRange();
+  const totalDays = days.length;
+  const hasData = totalDays > 0 && (
+    habitsConfig.some(h => Object.keys(habitDays).some(iso => iso >= startISO && iso <= todayIso() && habitDays[iso][h.key])) ||
+    transactions.some(t => t && typeof t.date === 'string' && t.date >= startISO)
+  );
+
+  if(!hasData){
+    if(empty) empty.classList.remove('hidden');
+    if(body) body.classList.add('hidden');
+    return;
+  }
+  if(empty) empty.classList.add('hidden');
+  if(body) body.classList.remove('hidden');
+
+  // ---- hábitos ----
+  const habitGrid = document.getElementById('statsHabitGrid');
+  if(habitGrid){
+    if(habitsConfig.length === 0){
+      habitGrid.innerHTML = '<div class="stats-no-data">Aún no tienes hábitos configurados.</div>';
+    } else {
+      habitGrid.innerHTML = habitsConfig.map(h => {
+        let checked = 0;
+        for(const iso of days){ if(habitDays[iso] && habitDays[iso][h.key]) checked++; }
+        const pct = totalDays ? Math.round((checked / totalDays) * 100) : 0;
+        const st = habitStreak(h.key, startISO);
+        return `
+          <div class="stat-habit-card">
+            <div class="sh-head">
+              <span class="habit-icon" style="--icon-color:${h.color}">${h.icon}</span>
+              <span class="sh-label">${esc(h.label)}</span>
+              <span class="sh-pct mono">${pct}%</span>
+            </div>
+            <div class="sh-track"><span class="sh-fill" style="width:${pct}%;background:${h.color}"></span></div>
+            <div class="sh-meta">
+              <span class="sh-meta-item"><b class="mono">${checked}</b> días</span>
+              <span class="sh-meta-item">racha <b class="mono">${st.current}</b></span>
+              <span class="sh-meta-item">mejor <b class="mono">${st.best}</b></span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
+
+  // ---- finanzas ----
+  const rangeTx = transactions.filter(t => t && typeof t.date === 'string' && t.date >= startISO);
+  const totalIn = rangeTx.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s + (Number.isFinite(Number(t.monto)) ? Number(t.monto) : 0),0);
+  const totalOut = rangeTx.filter(t=>t.tipo==='gasto').reduce((s,t)=>s + (Number.isFinite(Number(t.monto)) ? Number(t.monto) : 0),0);
+  const stIn = document.getElementById('stIn');
+  const stOut = document.getElementById('stOut');
+  const stBal = document.getElementById('stBalance');
+  if(stIn) stIn.textContent = fmtCLP(totalIn);
+  if(stOut) stOut.textContent = fmtCLP(totalOut);
+  if(stBal){
+    stBal.textContent = fmtCLP(totalIn - totalOut);
+    stBal.style.color = (totalIn-totalOut) >= 0 ? 'var(--c-success)' : 'var(--c-danger)';
+  }
+
+  const catBox = document.getElementById('stCats');
+  if(catBox){
+    const outByCat = {};
+    for(const t of rangeTx){
+      if(t.tipo !== 'gasto') continue;
+      const m = Number.isFinite(Number(t.monto)) ? Number(t.monto) : 0;
+      outByCat[t.categoria || 'Otros'] = (outByCat[t.categoria || 'Otros'] || 0) + m;
+    }
+    const sorted = Object.entries(outByCat).sort((a,b)=>b[1]-a[1]);
+    const max = sorted.length ? sorted[0][1] : 1;
+    catBox.innerHTML = sorted.length === 0
+      ? '<div class="stats-no-data">Sin gastos en este período.</div>'
+      : sorted.map(([cat, m]) => `
+          <div class="stat-cat-row">
+            <span class="sc-name">${esc(cat)}</span>
+            <span class="sc-track"><span class="sc-fill" style="width:${Math.round((m/max)*100)}%"></span></span>
+            <span class="sc-val mono">${fmtCLP(m)}</span>
+          </div>`).join('');
+  }
+}
+
+document.querySelectorAll('.range-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('view-'+btn.dataset.view).classList.add('active');
-    if(btn.dataset.view === 'datos') renderReorderList();
-    if(btn.dataset.view === 'cuenta' && window.BitacoraAuth && window.BitacoraAuth.renderPanel) window.BitacoraAuth.renderPanel();
+    statsRange = btn.dataset.range;
+    renderStats();
   });
+});
+
+/* ---------------------------------------------------------------
+   Tabs (sidebar desktop + bottom nav móvil)
+--------------------------------------------------------------- */
+function switchView(name){
+  document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.side-link, .bn-link').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view === name);
+    if(b.dataset.view === name) b.setAttribute('aria-current','page');
+    else b.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const target = document.getElementById('view-'+name);
+  if(target) target.classList.add('active');
+  if(name === 'datos') renderReorderList();
+  if(name === 'stats') renderStats();
+  if(name === 'cuenta' && window.BitacoraAuth && window.BitacoraAuth.renderPanel) window.BitacoraAuth.renderPanel();
+}
+
+document.querySelectorAll('[data-view]').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchView(btn.dataset.view));
 });
 
 /* ---------------------------------------------------------------

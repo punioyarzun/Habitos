@@ -318,9 +318,11 @@
   // ---------- UI: pestaña "Cuenta" del panel (solo con sesión) ----------
   function renderAccountPanel() {
     var state = document.getElementById('authState');
+    var sUser = document.getElementById('sidebarUser');
     if (!state) return;
     if (!session || !session.access_token) {
       state.innerHTML = '';
+      if (sUser) sUser.innerHTML = '';
       return;
     }
     var email = (session.user && session.user.email) || 'usuario';
@@ -332,6 +334,14 @@
       '</div>';
     var logout = document.getElementById('authLogout');
     if (logout) logout.addEventListener('click', signOut);
+    if (sUser) {
+      var initial = (email && email.charAt(0)) ? email.charAt(0).toUpperCase() : '?';
+      sUser.innerHTML =
+        '<div class="side-user">' +
+          '<span class="side-user-avatar">' + escHTML(initial) + '</span>' +
+          '<span class="side-user-email">' + escHTML(email) + '</span>' +
+        '</div>';
+    }
   }
 
   // ---------- post-login: marcar backend y sembrar datos locales ----------
@@ -379,6 +389,7 @@
     }
     if (session && session.access_token) {
       showApp();
+      renderAccountPanel();
       verifyAndSeed();
     } else {
       showGate();

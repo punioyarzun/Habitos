@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bitacora-v2';
+const CACHE_NAME = 'bitacora-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,7 +7,9 @@ const APP_SHELL = [
   './auth.js',
   './supabase.config.js',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon.svg',
+  './assets/logo.svg',
+  './assets/favicon.svg'
 ];
 
 self.addEventListener('install', (event) => {

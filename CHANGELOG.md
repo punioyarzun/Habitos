@@ -58,3 +58,43 @@ Resumen de cambios realizados en esta iteración (auth por cuentas de usuario + 
 - **Rotar la service‑role key**: `sb_secret_reSL98hns...` quedó expuesta en una conversación. Se recomienda rotarla en Supabase (Project Settings → API Keys) y actualizar la variable `SUPABASE_SERVICE_ROLE_KEY` en Netlify.
 - **Proveedores OAuth**: los botones Google/GitHub requieren habilitar cada proveedor en Supabase (Authentication → Providers) y registrar `https://kronvia.netlify.app` como redirect.
 - **Confirmación de email**: crear cuenta pide confirmar email; si se desactiva "Confirm email" en Supabase, el alta inicia sesión directamente.
+
+---
+
+## Iteración: refactor SaaS — layout, identidad y Estadísticas (2026-08-29)
+
+### Resumen
+- Rediseño del shell como **aplicación SaaS**: **sidebar fijo** en escritorio (≥821px) y **topbar + barra de navegación inferior** en móvil (<820px), respetando el contrato `data-view`/`.view.active`/`#view-*` para no romper la lógica existente.
+- **Nueva identidad visual** (favicon/logo/isotipo): marca geométrica de "constancia" (3 barras ascendentes + punto dorado) aplicada en el gate, el sidebar, la topbar y el favicon.
+
+### index.html
+- Se reemplazó el `header.app-header` + `nav.tabs` por la estructura `div.app-layout > aside.sidebar + div.app-main > header.topbar + main`.
+- Nueva navegación: `.side-nav` (escritorio) y `.bottom-nav` (móvil), ambas con botones `[data-view]`.
+- Nueva sección **`#view-stats` (Estadísticas)** con selector de rango (Semana/Mes/Año), tarjetas de hábitos y desglose financiero por categoría.
+- El gate de autenticación ahora muestra el logotipo (`icon.svg`).
+- Tag del HTML verificado balanceado (6/6 secciones, divs cerrados).
+
+### app.js
+- Se eliminó el código muerto `refreshAllViews` (+ su parámetro `keepCategoryModal`), definido pero nunca llamado.
+- La gestión de pestañas pasó de `nav.tabs` a una función genérica **`switchView(name)`** que sincroniza sidebar y bottom-nav, actualiza `aria-current` y dispara `renderReorderList()`, `renderStats()` y `renderPanel()` según la vista.
+- Nueva lógica de **Estadísticas**: `renderStats()` (adherencia por hábito, racha actual/mejor, totales de finanzas y top de categorías por rango) y helpers `statsStartISO()`, `habitStreak()`, `habitsInRange()`, `addDaysISO()`.
+
+### auth.js
+- `renderAccountPanel()` ahora también rellena el **chip de usuario** del sidebar (`#sidebarUser`) con inicial + email.
+- Se llama a `renderAccountPanel()` al inicio con sesión para poblar el chip de inmediato.
+
+### styles.css
+- Definiciones del nuevo shell SaaS: `.app-layout`, `.sidebar`, `.side-nav/.side-link`, `.sidebar-user/.side-user`, `.topbar`, `.bottom-nav/.bn-link` y media queries de corte (820px).
+- Estilos de la sección Estadísticas (`.stats-toolbar`, `.range-btn`, `.stat-habit-card`, `.stat-cat-row`, etc.).
+- Actualizada la marca del gate (`.gate-mark`). Llaves balanceadas.
+
+### Assets
+- `assets/favicon.svg` y `assets/logo.svg` (nueva marca de constancia).
+- `icon.svg` actualizado a la nueva identidad (usado en gate, sidebar, topbar, manifest y favicon).
+
+### README.md
+- Se documentan las secciones del producto y se añade `icon.svg`/`assets/` a la estructura.
+
+### Notas / pendientes (ampliadas)
+- **Migración a modelo relacional**: la base actual guarda toda la app como un único `jsonb` por usuario (`bitacora_user_data`). Se recomienda evolucionar a tablas normalizadas (Users / Habits / HabitCompletions / FinancialTransactions / FinancialCategories) con RLS y políticas `uid() = auth.uid()`. Dado el riesgo de romper datos en producción, NO se migró en esta iteración; se mantiene el esquema compatible actual.
+- **bitacora.html**: sigue siendo la variante legacy autocontenida (sin auth); NO se tocó su lógica. Sigue pendiente consolidarla o eliminarla para evitar duplicación.
