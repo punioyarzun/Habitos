@@ -1269,13 +1269,15 @@ function initPwaInstall(){
   const showButton = () => btn.classList.remove('hidden');
 
   window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
     deferredPrompt = event;
     showButton();
   });
 
   btn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      showToast('La instalación no está disponible en este navegador.', null, 'error');
+      return;
+    }
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
