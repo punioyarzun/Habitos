@@ -1,69 +1,120 @@
-# Bitácora — hábitos y gastos
+# Bitácora — hábitos, calendario, finanzas y estadísticas
 
-Aplicación web para registrar hábitos, notas, ingresos y gastos, con **cuentas de usuario**.
+Plataforma personal de seguimiento de hábitos y control financiero, con cuentas de
+usuario, sincronización en la nube y aislamiento de datos por usuario garantizado a
+nivel de base de datos (Row Level Security).
 
-- Sin sesión: funciona en modo local con `localStorage` (como antes).
-- Con sesión: tus datos se guardan en la nube (Supabase) vía una Netlify Function y se **sincronizan en cualquier dispositivo**.
-- Login por **email + contraseña** y por **Google/GitHub** (OAuth).
-- Interfaz **SaaS**: sidebar en escritorio y barra de navegación inferior en móvil.
-- Sección **Estadísticas** con análisis de constancia (hábitos) y finanzas (ingresos/gastos por categoría) filtrable por semana/mes/año.
+**La app en producción es la carpeta [`web/`](./web) (React + TypeScript + Tailwind + Supabase).**
+La versión anterior (HTML/CSS/JS vanilla, sin estadísticas ni esquema relacional) se
+conserva en [`legacy-vanilla-app/`](./legacy-vanilla-app) solo como referencia y camino
+de rollback — **no se despliega**.
 
-## Secciones
+## Estructura del repo
 
-| Sección | Qué ofrece |
-|---------|------------|
-| **Dashboard** | Racha principal, hábitos del día, resumen semanal y logro, tip diario. |
-| **Calendario** | Mapa mensual de cumplimiento y edición por día. |
-| **Gastos** | Control mensual de ingresos/gastos, balance y categorías. |
-| **Estadísticas** | Evolución de hábitos (adherencia, racha actual/mejor) y finanzas por rango. |
-| **Datos** | Exportar/importar copia de seguridad y orden de hábitos. |
-| **Cuenta** | Correo, estado de sincronización y cierre de sesión. |
+| Ruta | Qué es |
+|---|---|
+| `web/` | **App en producción.** React 19 + TypeScript + Vite + Tailwind v4 + React Router + Supabase-js. Ver `web/README` (esta misma sección cubre su configuración). |
+| `supabase/schema_v2.sql` | Esquema relacional actual: `profiles`, `habit_categories`, `habits`, `habit_completions`, `financial_categories`, `financial_transactions`, todas con RLS. |
+| `supabase/migrate-to-relational.mjs` | Script único para migrar datos del modelo viejo (un JSON por usuario) al esquema relacional. Correr una sola vez, manualmente. |
+| `supabase/schema.sql` | Esquema **viejo** (un JSON por usuario). Solo relevante si aún corres `legacy-vanilla-app/`. |
+| `netlify/functions/bitacora.mjs` | Función serverless del modelo viejo. Ya no la usa la app en producción (React habla directo con Supabase, protegido por RLS) — se conserva por si necesitas lógica server-side con privilegios elevados a futuro. |
+| `legacy-vanilla-app/` | App anterior completa (sin estadísticas, sin esquema relacional). No se despliega; ver `netlify.toml` — `publish` apunta a `web/dist`. |
+| `netlify.toml` | Config de build: compila `web/` y publica `web/dist`. |
+| `AUDIT.md` / `CHANGELOG.md` / `ARQUITECTURA.md` | Historial de decisiones técnicas de las distintas fases del proyecto. |
 
-## Estructura
+## Arquitectura
 
-| Archivo | Qué es |
-|---------|--------|
-| `index.html` | Entrada de producción (CSP estricta). |
-| `styles.css` | Estilos. |
-| `app.js` | Lógica de la app (hábitos, gastos, saneado y protección XSS). |
-| `auth.js` | Login/logout (Supabase Auth) y `window.storage` por usuario. |
-| `supabase.config.js` | Config pública de Supabase (URL + anon key). |
-| `netlify/functions/bitacora.mjs` | Función serverless: datos por usuario sobre Supabase. |
-| `supabase/schema.sql` | Esquema de la tabla que usa la función. |
-| `bitacora.html` | Copia de seguridad clásica (solo local, sin cuentas). |
-| `server.js` | Servidor local de desarrollo, puerto 8000. |
-| `netlify.toml` | Config Netlify (funciones, SPA, cabeceras seguras). |
-| `404.html` / `_headers` | Fallback SPA y cabeceras para hosts estáticos. |
-| `icon.svg` / `assets/` | Identidad visual (logo/favicon SVG). |
-
-## Configuración del backend (una vez)
-
-### 1) Supabase
-1. Crea un proyecto en https://supabase.com (plan gratis).
-2. En el **SQL Editor** ejecuta el contenido de `supabase/schema.sql`.
-3. En **Authentication → Providers** deja Email activado y, si quieres, activa **Google** y **GitHub** (te pedirán las claves OAuth de esos proveedores).
-
-### 2) Claves
-- **Anon key** (pública): Dashboard → Settings → API → *anon public*. Pégala en:
-  - `supabase.config.js` → `anonKey`
-  - Variable de entorno `SUPABASE_ANON_KEY` en Netlify.
-- **Service role key** (secreta): solo en Netlify como `SUPABASE_SERVICE_ROLE_KEY`. **Nunca** en el repo ni en el chat.
-- **`SUPABASE_URL`** también en Netlify.
-
-### 3) Netlify
-1. Site settings → **Environment variables**: añade `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-2. Sube el repo (Netlify instala `@supabase/supabase-js` automáticamente para las funciones).
-
-## Probar en local
-
-```bash
-node server.js   # abre http://localhost:8000
+```
+React (web/)  ──REST/PKCE──►  Supabase Auth
+              ──REST──────►  Supabase Postgres (PostgREST)
+                              └─ Row Level Security decide qué fila
+                                 puede leer/escribir cada usuario.
 ```
 
-*Las funciones de backend solo corren en Netlify; en local, sin sesión configurada, la app queda en modo local.*
+No hay una capa de backend propia para el CRUD normal: el navegador habla
+directamente con Supabase usando el JWT del usuario logueado, y es **Postgres**
+(no el frontend, no un servidor intermedio) quien decide qué datos puede tocar cada
+quien. Esto es intencional — menos piezas en movimiento, menos superficie de ataque,
+y es exactamente el modelo que Supabase está diseñado para soportar de forma segura.
+
+### Modelo de datos
+
+```
+auth.users (Supabase)
+ └─ profiles              (1:1 — preferencias, nombre)
+ └─ habit_categories       (opcional, para agrupar hábitos)
+ └─ habits
+     └─ habit_completions  (1 fila por día marcado)
+ └─ financial_categories
+ └─ financial_transactions
+```
+
+Ver `supabase/schema_v2.sql` para el detalle completo (constraints, índices, triggers).
+
+## Puesta en marcha (una vez)
+
+### 1) Base de datos
+1. Crea un proyecto en [supabase.com](https://supabase.com) (o reusa el existente).
+2. Ejecuta `supabase/schema_v2.sql` en el SQL Editor.
+3. **Si ya tenías datos reales en el modelo viejo** (`bitacora_data`), sigue
+   `supabase/migrate-to-relational.mjs` (instrucciones dentro del archivo: correr con
+   `--dry-run` primero, hacer backup, luego correr real). Es un script manual, no se
+   despliega.
+4. En **Authentication → URL Configuration**, agrega la URL de tu sitio de Netlify
+   como Redirect URL (la necesitan OAuth y el link de "recuperar contraseña").
+5. En **Authentication → Providers**, activa Email y, si quieres, Google/GitHub.
+
+### 2) Variables de entorno
+- `web/.env.example` → cópialo a `web/.env.local` para desarrollo local.
+- En Netlify: **Site settings → Environment variables** → agrega `VITE_SUPABASE_URL`
+  y `VITE_SUPABASE_ANON_KEY` (mismos valores, deben empezar con `VITE_` para que Vite
+  los incluya en el build del navegador — la anon key es pública por diseño, no es secreta).
+
+### 3) Netlify
+`netlify.toml` ya está configurado: `base = "web"`, `command = "npm run build"`,
+`publish = "dist"`. Solo conecta el repo y agrega las variables de entorno de arriba.
+
+## Desarrollo local
+
+```bash
+npm run dev          # equivalente a: cd web && npm run dev  →  http://localhost:5173
+npm run build         # build de producción + valida la función legacy
+npm run legacy:dev     # sirve la app vieja en http://localhost:8000, por si la necesitas
+```
+
+## Checklist antes de dar por "en producción"
+
+- [ ] `supabase/schema_v2.sql` ejecutado.
+- [ ] Si aplica, `migrate-to-relational.mjs` corrido (con backup previo) y verificado.
+- [ ] `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` configuradas en Netlify.
+- [ ] Redirect URL de tu dominio agregada en Supabase Auth.
+- [ ] `npm run build` corre limpio (0 errores de TypeScript, sin warnings de bundle
+      fuera de lo esperado).
+- [ ] Probado en producción: crear cuenta → crear hábito → marcarlo → cerrar sesión →
+      entrar desde otro dispositivo → el dato aparece.
+- [ ] Probado: "¿Olvidaste tu contraseña?" → email → link → contraseña nueva → login.
+- [ ] Probado: login con Google/GitHub si están activados.
+- [ ] Probado en móvil real (no solo devtools): nav inferior, formularios, calendario,
+      gráficos de Estadísticas.
+- [ ] Revisados los logs de build en Netlify tras el primer deploy.
 
 ## Seguridad
-- Escapado/saneado de toda la entrada del usuario (evita XSS) y validación de importaciones, fechas y montos.
-- La función valida el JWT con Supabase antes de leer/escribir; el `user_id` sale del token, nunca del body.
-- La tabla tiene RLS activada y los accesos directos anónimos están bloqueados (la escritura pasa solo por la function con service role).
-- CSP estricta en `index.html`.
+
+- **Aislamiento de datos por usuario garantizado en la base de datos**, no en el
+  frontend: cada tabla tiene RLS con policies `auth.uid() = user_id` para
+  select/insert/update/delete. Aunque hubiera un bug en el código de React, Postgres
+  igual bloquea el acceso a filas de otro usuario.
+- Auth con flujo **PKCE** (más seguro que "implicit" para SPAs) vía `supabase-js`.
+- CSP estricta (`default-src 'none'`) en `web/index.html`, reforzada a nivel de
+  servidor en `web/public/_headers` (Netlify la sirve desde `dist/_headers`).
+- Validación de montos, fechas y longitudes de texto tanto en el cliente (feedback
+  inmediato) como en la base de datos (constraints `check` en `schema_v2.sql`) — la
+  validación del cliente es UX, la de la base de datos es la que realmente protege.
+- React escapa automáticamente todo el contenido dinámico en JSX (a diferencia de la
+  app vanilla anterior, no hay riesgo de XSS por `innerHTML` sin sanitizar).
+
+## Estado y próximos pasos
+
+Ver `CHANGELOG.md` para el detalle de qué se implementó en cada fase y qué queda
+pendiente (branding/logo dedicado, tests automatizados, filtros de rango personalizado
+en Estadísticas, categorías de hábito en la UI, etc.).

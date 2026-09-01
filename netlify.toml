@@ -1,14 +1,25 @@
 [build]
-  publish = "."
-  functions = "netlify/functions"
+  base = "web"
+  command = "npm run build"
+  publish = "dist"
+  # Relativo a "base": el directorio real es <repo>/netlify/functions.
+  # Se conserva por si en el futuro necesitas lógica server-side con
+  # privilegios elevados; el CRUD normal de la app ya no la necesita
+  # (habla directo con Supabase, protegido por Row Level Security).
+  functions = "../netlify/functions"
 
-# Netlify Functions (backend). Debe ir ANTES del catch-all SPA.
+[build.environment]
+  NODE_VERSION = "22"
+
+# Netlify Functions (opcional/legacy — ver nota arriba). Debe ir ANTES del
+# catch-all SPA.
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-# SPA fallback: any missing route serves la app
+# SPA fallback: cualquier ruta no encontrada sirve la app de React
+# (React Router resuelve la ruta real del lado del cliente).
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -23,9 +34,15 @@
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Cache-Control = "no-store"
-    Content-Security-Policy = "default-src 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://rjmftwujvusprlbxtbbg.supabase.co https://*.supabase.co; base-uri 'self'; form-action 'self'; object-src 'none';"
+
+# Los archivos bajo /assets/ salen de Vite con hash en el nombre
+# (ej. index-3Vxboasc.js): son inmutables, se pueden cachear "para siempre".
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
-  for = "/app.js"
+  for = "/icon-*.png"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "public, max-age=31536000, immutable"

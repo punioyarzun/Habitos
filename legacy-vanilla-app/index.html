@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora — hábitos y gastos</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://rjmftwujvusprlbxtbbg.supabase.co; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+<link rel="stylesheet" href="styles.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#10151a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<!-- ===================== GATE DE AUTENTICACIÓN ===================== -->
+<div id="authGate" class="auth-gate" aria-hidden="false">
+  <div class="auth-gate-bg"></div>
+  <div class="auth-gate-inner">
+
+    <div class="auth-gate-brand">
+      <h1>Bitácora<span class="dot">.</span></h1>
+      <p>Hábitos y control de gastos, sincronizados en la nube.</p>
+    </div>
+
+    <div class="auth-card" id="authCard">
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" id="authTabLogin" role="tab" aria-selected="true">Iniciar sesión</button>
+        <button type="button" class="auth-tab" id="authTabRegister" role="tab" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <div class="auth-form" id="authForm">
+        <div id="authMsg" class="auth-msg" role="status"></div>
+
+        <label class="auth-label" for="authEmail">Correo electrónico
+          <input type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email">
+        </label>
+
+        <label class="auth-label" for="authPass">Contraseña
+          <input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password">
+        </label>
+
+        <label class="auth-label auth-label-confirm" for="authPass2" style="display:none;">Confirmar contraseña
+          <input type="password" id="authPass2" placeholder="••••••••" autocomplete="new-password">
+        </label>
+
+        <button type="button" class="auth-submit" id="authSubmit">Entrar</button>
+
+        <p class="auth-forgot">
+          <button type="button" class="auth-link-btn" id="authForgotBtn">¿Olvidaste tu contraseña?</button>
+        </p>
+
+        <div class="auth-divider"><span>o continúa con</span></div>
+
+        <div class="auth-social">
+          <button type="button" class="auth-social-btn auth-google" id="authGoogle">Google</button>
+          <button type="button" class="auth-social-btn auth-github" id="authGithub">GitHub</button>
+        </div>
+      </div>
+
+      <!-- Recuperar contraseña: pedir el email -->
+      <div class="auth-form hidden" id="authRecoverForm">
+        <div id="authRecoverMsg" class="auth-msg" role="status"></div>
+        <p class="auth-recover-copy">Ingresa tu correo y te enviaremos un enlace para crear una contraseña nueva.</p>
+        <label class="auth-label" for="authRecoverEmail">Correo electrónico
+          <input type="email" id="authRecoverEmail" placeholder="tu@email.com" autocomplete="email">
+        </label>
+        <button type="button" class="auth-submit" id="authRecoverSend">Enviar enlace</button>
+        <p class="auth-forgot"><button type="button" class="auth-link-btn" id="authRecoverBack">Volver a iniciar sesión</button></p>
+      </div>
+
+      <!-- Después de abrir el enlace del email: definir contraseña nueva -->
+      <div class="auth-form hidden" id="authResetForm">
+        <div id="authResetMsg" class="auth-msg" role="status"></div>
+        <p class="auth-recover-copy">Crea tu nueva contraseña.</p>
+        <label class="auth-label" for="authResetPass">Contraseña nueva
+          <input type="password" id="authResetPass" placeholder="••••••••" autocomplete="new-password">
+        </label>
+        <label class="auth-label" for="authResetPass2">Confirmar contraseña
+          <input type="password" id="authResetPass2" placeholder="••••••••" autocomplete="new-password">
+        </label>
+        <button type="button" class="auth-submit" id="authResetSubmit">Guardar contraseña</button>
+      </div>
+
+      <p class="auth-foot">Tus datos se guardan en la nube y se pueden sincronizar entre dispositivos.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<div id="appShell" class="app-shell hidden" aria-hidden="true">
+
+<div id="loading" class="loading-overlay">cargando bitácora…</div>
+<div id="syncToast" class="sync-toast" role="status" aria-live="polite"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <p id="modalBody"></p>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+
+<header class="app-header">
+  <div class="brand">
+    <h1>Bitácora<span class="dot">.</span></h1>
+  </div>
+  <p class="tagline">Registro diario de hábitos y control de gastos — con cuenta, tus datos se guardan en la nube y se sincronizan en cualquier dispositivo.</p>
+  <nav class="tabs">
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="calendario">Calendario</button>
+    <button data-view="gastos">Gastos</button>
+    <button data-view="datos">Datos</button>
+    <button data-view="cuenta">Cuenta</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <section id="view-dashboard" class="view active">
+    <div class="hero">
+      <div class="hero-number mono" id="heroDays">0</div>
+      <div class="hero-copy">
+        <h2 id="heroTitle">días consecutivos — </h2>
+        <p id="heroSub">Cada día marcado es un eslabón más en la cadena. No la rompas.</p>
+        <div style="margin-top:8px;">
+          <span class="cat-group-label" style="font-size:11px;">Hábito destacado:</span>
+          <select id="heroHabitSelect" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-family:'Inter';font-size:12px;"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card tip-card" style="margin-bottom:16px;">
+      <div class="tip-head">
+        <div class="tip-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.5.4.8 1 .8 1.6V17h6.4v-.7c0-.6.3-1.2.8-1.6A7 7 0 0 0 12 2Z"/></svg>
+        </div>
+        <strong>Tip del día</strong>
+      </div>
+      <p class="tip-text" id="tipText"></p>
+      <p class="tip-footer">Información general, no reemplaza apoyo profesional. Si lo necesitas, hablar con un especialista suma.</p>
+    </div>
+
+    <div class="habit-grid" id="habitGrid"></div>
+
+    <div class="card add-habit-form" id="addHabitForm" style="margin-top:16px;">
+      <h2 style="font-family:'Space Grotesk'; font-size:15px; margin:0 0 4px 0;">Nuevo hábito</h2>
+
+      <div class="cat-group">
+        <div class="cat-group-label">Vicios o malos hábitos que quieres dejar</div>
+        <div class="cat-chips" id="catChipsVicio"></div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-group-label">Hábitos que quieres construir</div>
+        <div class="cat-chips" id="catChipsHabito"></div>
+      </div>
+
+      <div class="form-row" style="margin-top:10px;">
+        <div class="field" style="flex:1; min-width:180px;">
+          <label>Nombre</label>
+          <input type="text" id="newHabitLabel" maxlength="60" placeholder="Elige una categoría arriba o escribe la tuya…">
+        </div>
+      </div>
+      <div class="swatches" id="newHabitSwatches"></div>
+      <p id="newHabitError" style="color:var(--c-danger); font-size:12.5px; margin:0 0 10px 0; min-height:16px;"></p>
+      <div style="display:flex; gap:8px;">
+        <button class="save-btn" id="newHabitAdd">Agregar hábito</button>
+        <button class="del-btn" id="newHabitCancel" style="font-size:13px;">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="card today-panel" style="margin-top:16px;">
+      <h2>Hoy</h2>
+      <div class="date-lbl" id="todayLbl"></div>
+      <div class="toggle-row" id="todayToggles"></div>
+      <textarea class="nota" id="todayNota" maxlength="2000" placeholder="Nota del día (opcional): cómo te sentiste, qué hiciste de ejercicio, en qué programaste…"></textarea>
+      <div style="margin-top:10px;">
+        <button class="save-btn" id="saveToday">Guardar día</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CALENDARIO ===================== -->
+  <section id="view-calendario" class="view">
+    <div class="card">
+      <div class="cal-nav">
+        <h2 id="calTitle"></h2>
+        <div class="cal-nav-btns">
+          <button class="cal-today-btn" id="calToday">Hoy</button>
+          <button id="calPrev">‹</button>
+          <button id="calNext">›</button>
+        </div>
+      </div>
+      <p class="cal-subtitle">Un día a la vez — el día marcado como <strong>HOY</strong> es el único que importa ahora mismo.</p>
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+
+      <div class="day-editor card" id="dayEditor" style="display:none;">
+        <h2 style="font-family:'Space Grotesk'; font-size:15px; margin:0 0 10px 0;" id="dayEditorTitle"></h2>
+        <div class="toggle-row" id="dayEditorToggles"></div>
+        <textarea class="nota" id="dayEditorNota" maxlength="2000" placeholder="Nota del día (opcional)"></textarea>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="save-btn" id="dayEditorSave">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GASTOS ===================== -->
+  <section id="view-gastos" class="view">
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <h2 style="font-family:'Space Grotesk'; font-size:16px; margin:0;">Control mensual</h2>
+        <input type="month" id="monthPicker" class="month-select">
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card in"><div class="lbl">Ingresos</div><div class="val mono" id="sumIn">$0</div></div>
+        <div class="summary-card out"><div class="lbl">Gastos</div><div class="val mono" id="sumOut">$0</div></div>
+        <div class="summary-card"><div class="lbl">Balance</div><div class="val mono" id="sumBalance">$0</div></div>
+      </div>
+
+      <div class="tx-form">
+        <div class="field"><label>Fecha</label><input type="date" id="txDate"></div>
+        <div class="field"><label>Tipo</label>
+          <select id="txTipo">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+          </select>
+        </div>
+        <div class="field"><label>Categoría</label><select id="txCategoria"></select></div>
+        <div class="field"><label>Monto (CLP)</label><input type="number" id="txMonto" min="0" step="1" placeholder="0"></div>
+        <button class="add-btn" id="txAdd">Agregar</button>
+      </div>
+      <div class="field" style="margin-top:8px;"><label>Descripción (opcional)</label><input type="text" id="txDesc" maxlength="300" placeholder="Ej: arriendo, honorario cliente PC Solutions…"></div>
+
+      <table class="tx-table" id="txTable">
+        <thead>
+          <tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th style="text-align:right;">Monto</th><th></th></tr>
+        </thead>
+        <tbody id="txTbody"></tbody>
+      </table>
+      <div class="empty-msg" id="txEmpty" style="display:none;">Sin movimientos este mes todavía.</div>
+
+      <div style="margin-top:14px;">
+        <button class="del-btn" id="manageCatsBtn" style="font-size:12px;color:var(--c-perfect);">⚙ Gestionar categorías</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DATOS ===================== -->
+  <section id="view-datos" class="view">
+    <div class="card">
+      <h2 style="font-family:'Space Grotesk'; font-size:16px; margin:0 0 4px 0;">Tus datos</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin:0 0 6px 0;">Todos los cambios se guardan en este dispositivo. Haz una copia de seguridad para no perder tu progreso.</p>
+
+      <div style="margin-top:12px;">
+        <h3 style="font-family:'Space Grotesk'; font-size:14px; margin:0 0 8px 0;">Orden de hábitos</h3>
+        <p style="color:var(--text-muted); font-size:12.5px; margin:0 0 10px 0;">Arrastra para reordenar cómo aparecen tus hábitos en el Dashboard.</p>
+        <div id="reorderList"></div>
+      </div>
+
+      <div class="data-actions">
+        <button id="exportBtn">⬇ Exportar copia de seguridad</button>
+        <button id="importBtn">⬆ Importar copia de seguridad</button>
+        <button id="resetBtn">🗑 Restablecer todo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CUENTA ===================== -->
+  <section id="view-cuenta" class="view">
+    <div class="card auth-panel" id="authPanel">
+      <div class="auth-panel-inner">
+        <h2 class="auth-panel-title">Tu cuenta</h2>
+        <div id="authState"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</div><!-- /#appShell -->
+
+<script src="supabase.config.js"></script>
+<script src="auth.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

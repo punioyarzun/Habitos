@@ -1,0 +1,22 @@
+# ============================================================================
+# Bitácora — variables de entorno de Netlify
+# Copia este archivo a .env (NO subas .env a git) y rellena los valores,
+# pero las credenciales reales deben ir en el panel de Netlify:
+#   Site settings > Environment variables
+# ============================================================================
+
+# URL del proyecto de Supabase (Dashboard > Settings > API > Project URL)
+SUPABASE_URL=https://rjmftwujvusprlbxtbbg.supabase.co
+
+# Clave pública "anon" (Dashboard > Settings > API > Project API keys > anon public)
+# Esta va también en supabase.config.js (es pública por diseño) y es la que
+# usa netlify/functions/bitacora.mjs.
+SUPABASE_ANON_KEY=tu_anon_key_publica
+
+# NOTA: este proyecto NO usa la "service_role" key. La función de backend
+# (netlify/functions/bitacora.mjs) opera con el JWT del propio usuario y deja
+# que Row Level Security (ver supabase/schema.sql) decida qué fila puede leer
+# o escribir cada quien. Un secreto menos que gestionar y que podría filtrarse.
+# Si en el futuro necesitas operaciones de administrador que sí requieran
+# saltarse RLS, agrega SUPABASE_SERVICE_ROLE_KEY aquí y en Netlify — pero
+# nunca en el repo ni en el chat, y solo en funciones que la necesiten.

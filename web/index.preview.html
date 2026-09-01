@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- El preview se sirve en un iframe sandboxeado (about:srcdoc), cuya
+         "location" no es una URL válida como base para el Router ni para
+         cualquier código que construya URLs relativas. Esta <base> le da
+         un origen válido para resolver contra. No afecta al build real de
+         producción (index.html), que no la necesita. -->
+    <base href="https://bitacora-preview.local/" />
+    <title>Bitácora — vista previa</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.preview.tsx"></script>
+  </body>
+</html>

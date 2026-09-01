@@ -1,7 +1,21 @@
 # Arquitectura — Bitácora con usuarios
 
-Estado: **diseño y preparación** (esta sesión). No se ha roto nada de lo que funciona hoy.
-Objetivo futuro: cada usuario inicia sesión y guarda sus propios hábitos, notas, ingresos y gastos en un backend central, para no perder datos al cambiar de navegador o dispositivo.
+> ⚠️ **Este documento describe un diseño exploratorio de una sesión anterior y NO
+> coincide con lo que finalmente se implementó.** Se conserva como referencia
+> histórica, pero si estás configurando el proyecto hoy, sigue **`README.md`** y
+> `supabase/schema.sql` / `netlify/functions/bitacora.mjs`, que son la fuente de
+> verdad actual. Diferencias principales respecto a lo descrito aquí:
+> - Se usó **Supabase Auth** directamente (REST), no Netlify Identity.
+> - La función serverless **no usa `SUPABASE_SERVICE_ROLE_KEY`**: opera con el JWT
+>   del propio usuario y deja que Row Level Security decida el acceso — un secreto
+>   menos que gestionar y sin riesgo de que un bug en la función exponga datos de
+>   otro usuario.
+> - Se agregó recuperación de contraseña y soporte PWA (instalable + shell offline),
+>   no contemplados en este diseño original.
+
+Estado original de este documento: **diseño y preparación** (sesión previa a la
+implementación). Se deja el contenido tal cual para trazabilidad de las decisiones
+que se evaluaron.
 
 ---
 
