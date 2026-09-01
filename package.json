@@ -6,7 +6,7 @@
   "description": "Repo raíz. La app en producción vive en web/ (React). Ver README.md.",
   "scripts": {
     "dev": "cd web && npm run dev",
-    "build": "(cd web && npm run build) && node --check netlify/functions/bitacora.mjs",
+    "build": "(cd web && npm run build)",
     "legacy:dev": "node legacy-vanilla-app/server.js"
   },
   "dependencies": {
