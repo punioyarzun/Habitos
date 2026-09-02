@@ -1,5 +1,61 @@
 # CHANGELOG — pase de optimización a producción
 
+## Fase 3 — Nuevos módulos: Gimnasio + Recordatorios
+
+Expansión de la plataforma de "hábitos + finanzas" a un ecosistema personal completo,
+**respetando la arquitectura existente** (Supabase directo con RLS, servicios finos,
+hooks con estado + toast, tokens de diseño CSS, componentes UI reutilizados). No se
+eliminó ni reescribió ninguna funcionalidad previa.
+
+### Base de datos (aditivo, no destructivo)
+- Nuevo `supabase/schema_gym_reminders.sql`, **idempotente**, con las mismas convenciones
+  que `schema_v2.sql` (RLS por `user_id`, índices, trigger `set_updated_at` reutilizado).
+- Gimnasio: `workout_routines`, `routine_days`, `routine_exercises`, `workout_sessions`,
+  `workout_set_logs`. Las series realizadas guardan el nombre del ejercicio
+  **denormalizado** para que el progreso histórico sobreviva a ediciones/borrados de la
+  rutina.
+- Recordatorios: `reminders` (+ `reminder_completions` para las ocurrencias de los
+  recurrentes, mismo patrón que `habit_completions`).
+
+### Gimnasio (`/gimnasio`, con sub-navegación)
+- **Dashboard**: entrenamientos de la semana, días seguidos, total, duración media,
+  barra de progreso semanal, último entrenamiento, próximo día programado, rutina activa.
+- **Rutinas**: 4 plantillas prediseñadas (Full Body, Push Pull Legs, Tren Superior/Inferior,
+  Principiante) + personalizada. Crear, editar, duplicar, eliminar, marcar activa.
+- **Editor de rutina**: días (con día de semana / descanso) y ejercicios (grupo muscular,
+  series, reps, peso, descanso, notas), reordenables.
+- **Modo entrenamiento** (mobile-first): cronómetro en vivo, series marcables una a una,
+  peso/reps editables, timer de descanso flotante, progreso %, guardado automático al
+  terminar. Integración **opcional** con el hábito "Entrenar" (se ofrece marcarlo hecho).
+- **Progreso**: entrenamientos por semana, evolución de peso máximo por ejercicio,
+  volumen total, ejercicios más realizados (recharts, en su propio chunk lazy).
+- **Calendario**: días entrenados / programados / descanso, detalle por día.
+
+### Recordatorios (`/recordatorios`)
+- CRUD con título, descripción, fecha, hora, categoría (preset + personalizada vía
+  datalist), prioridad (baja/media/alta) y recurrencia (única, diaria, semanal con días
+  específicos, mensual por día del mes, días de semana).
+- Vistas: Hoy, Próximos, Lista, Calendario, Completados. Completar, editar, eliminar,
+  posponer/reprogramar.
+
+### Notificaciones (reales, sin simulaciones)
+- Centro de recordatorios global (`hooks/reminderCenter.tsx`) montado tras el login:
+  campana en el header con badge de pendientes de hoy + vencidos.
+- Notificaciones del navegador (Notification API) mientras la app está abierta, activables
+  desde Configuración. Push en segundo plano documentado como paso futuro en
+  `NOTIFICACIONES.md` (no fingido).
+
+### Navegación
+- Sidebar desktop lista las 8 secciones. El bottom-nav móvil pasa a **4 accesos primarios
+  + "Más"** (sheet) para no saturar la pantalla del teléfono.
+
+### Verificación
+- `tsc -b` limpio, `vite build` OK (recharts sigue en chunk separado), `oxlint` sin
+  errores (solo los warnings de estilo ya presentes en el repo).
+- 17 tests nuevos de la lógica pura (`utils/reminders.test.ts`, `utils/gymStats.test.ts`);
+  suite completa 31/31 en verde.
+- Smoke test de arranque en navegador: la app monta sin errores de módulo/import.
+
 ## Fase 2.1 — Verificación visual real + corrección de contraste sistemática
 
 Después de armar la Fase 2, la probé de verdad en un navegador (Playwright +

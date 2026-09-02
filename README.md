@@ -1,8 +1,9 @@
-# Bitácora — hábitos, calendario, finanzas y estadísticas
+# Bitácora — hábitos, gimnasio, recordatorios, finanzas y estadísticas
 
-Plataforma personal de seguimiento de hábitos y control financiero, con cuentas de
-usuario, sincronización en la nube y aislamiento de datos por usuario garantizado a
-nivel de base de datos (Row Level Security).
+Plataforma personal integral de seguimiento: **hábitos, entrenamientos de gimnasio,
+recordatorios, finanzas y estadísticas**, con cuentas de usuario, sincronización en la
+nube y aislamiento de datos por usuario garantizado a nivel de base de datos (Row Level
+Security).
 
 **La app en producción es la carpeta [`web/`](./web) (React + TypeScript + Tailwind + Supabase).**
 La versión anterior (HTML/CSS/JS vanilla, sin estadísticas ni esquema relacional) se
@@ -14,7 +15,9 @@ de rollback — **no se despliega**.
 | Ruta | Qué es |
 |---|---|
 | `web/` | **App en producción.** React 19 + TypeScript + Vite + Tailwind v4 + React Router + Supabase-js. Ver `web/README` (esta misma sección cubre su configuración). |
-| `supabase/schema_v2.sql` | Esquema relacional actual: `profiles`, `habit_categories`, `habits`, `habit_completions`, `financial_categories`, `financial_transactions`, todas con RLS. |
+| `supabase/schema_v2.sql` | Esquema relacional base: `profiles`, `habit_categories`, `habits`, `habit_completions`, `financial_categories`, `financial_transactions`, todas con RLS. |
+| `supabase/schema_gym_reminders.sql` | **Extensión Gimnasio + Recordatorios** (aditiva e idempotente): `workout_routines`, `routine_days`, `routine_exercises`, `workout_sessions`, `workout_set_logs`, `reminders`, `reminder_completions`, todas con RLS. Correr después de `schema_v2.sql`. |
+| `NOTIFICACIONES.md` | Arquitectura del sistema de notificaciones (in-app + navegador) y el camino para push en segundo plano. |
 | `supabase/migrate-to-relational.mjs` | Script único para migrar datos del modelo viejo (un JSON por usuario) al esquema relacional. Correr una sola vez, manualmente. |
 | `supabase/schema.sql` | Esquema **viejo** (un JSON por usuario). Solo relevante si aún corres `legacy-vanilla-app/`. |
 | `netlify/functions/bitacora.mjs` | Función serverless del modelo viejo. Ya no la usa la app en producción (React habla directo con Supabase, protegido por RLS) — se conserva por si necesitas lógica server-side con privilegios elevados a futuro. |
@@ -47,15 +50,29 @@ auth.users (Supabase)
      └─ habit_completions  (1 fila por día marcado)
  └─ financial_categories
  └─ financial_transactions
+ ── Gimnasio ──
+ └─ workout_routines             (rutina; 1 marcada como activa)
+     └─ routine_days             (días: "Push", "Lunes", descanso…)
+         └─ routine_exercises    (ejercicios plantilla con objetivos)
+ └─ workout_sessions             (entrenamiento realizado)
+     └─ workout_set_logs         (series realizadas, denormalizadas)
+ ── Recordatorios ──
+ └─ reminders                    (título, fecha/hora, prioridad, recurrencia)
+     └─ reminder_completions     (1 fila por ocurrencia recurrente marcada)
 ```
 
-Ver `supabase/schema_v2.sql` para el detalle completo (constraints, índices, triggers).
+Ver `supabase/schema_v2.sql` y `supabase/schema_gym_reminders.sql` para el detalle
+completo (constraints, índices, triggers).
 
 ## Puesta en marcha (una vez)
 
 ### 1) Base de datos
 1. Crea un proyecto en [supabase.com](https://supabase.com) (o reusa el existente).
 2. Ejecuta `supabase/schema_v2.sql` en el SQL Editor.
+2b. Ejecuta `supabase/schema_gym_reminders.sql` (para Gimnasio + Recordatorios). Es
+   aditivo e idempotente: no toca las tablas existentes y se puede correr de nuevo sin
+   riesgo. **Sin este paso, las secciones Gimnasio y Recordatorios no tendrán dónde
+   guardar datos.**
 3. **Si ya tenías datos reales en el modelo viejo** (`bitacora_data`), sigue
    `supabase/migrate-to-relational.mjs` (instrucciones dentro del archivo: correr con
    `--dry-run` primero, hacer backup, luego correr real). Es un script manual, no se
@@ -85,6 +102,7 @@ npm run legacy:dev     # sirve la app vieja en http://localhost:8000, por si la 
 ## Checklist antes de dar por "en producción"
 
 - [ ] `supabase/schema_v2.sql` ejecutado.
+- [ ] `supabase/schema_gym_reminders.sql` ejecutado (Gimnasio + Recordatorios).
 - [ ] Si aplica, `migrate-to-relational.mjs` corrido (con backup previo) y verificado.
 - [ ] `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` configuradas en Netlify.
 - [ ] Redirect URL de tu dominio agregada en Supabase Auth.
