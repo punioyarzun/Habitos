@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
+type AuthStateChangeEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED' | 'PASSWORD_RECOVERY' | 'USER_DELETED' | 'MFA_CHALLENGE_VERIFIED';
+
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
@@ -24,12 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    supabase.auth.getSession().then((result: { data: { session: Session | null } }) => {
+      setSession(result.data.session);
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event: AuthStateChangeEvent, newSession: Session | null) => {
       if (event === 'PASSWORD_RECOVERY') {
         // Supabase ya autenticó al usuario con el token del link, pero
         // queremos forzar el formulario de "contraseña nueva" antes de

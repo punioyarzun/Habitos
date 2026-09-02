@@ -36,8 +36,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       .select('theme')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
-        if (data?.theme === 'light' || data?.theme === 'dark') setThemeState(data.theme);
+      .then((result: { data: { theme?: Theme } | null }) => {
+        if (result.data?.theme === 'light' || result.data?.theme === 'dark') setThemeState(result.data.theme);
       });
   }, [user]);
 
