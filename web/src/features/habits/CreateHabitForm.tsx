@@ -1,12 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Button } from '../../components/ui/Button';
-import { DEFAULT_ICONS, SWATCH_COLORS } from '../../utils/validation';
+import { SWATCH_COLORS } from '../../utils/validation';
+import { HABIT_ICON_NAMES, HabitIcon } from './habitIcons';
 import type { CreateHabitInput } from '../../services/habitsService';
 import { habitCategoriesService, type HabitCategory } from '../../services/habitCategoriesService';
 
 export function CreateHabitForm({ onSubmit, onCancel }: { onSubmit: (input: CreateHabitInput) => Promise<void>; onCancel: () => void }) {
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState(DEFAULT_ICONS[0]);
+  const [icon, setIcon] = useState(HABIT_ICON_NAMES[0]);
   const [color, setColor] = useState(SWATCH_COLORS[0]);
   const [categories, setCategories] = useState<HabitCategory[]>([]);
   const [categoryId, setCategoryId] = useState('');
@@ -92,15 +93,17 @@ export function CreateHabitForm({ onSubmit, onCancel }: { onSubmit: (input: Crea
 
       <div>
         <span className="text-xs font-medium text-[var(--text-muted)]">Icono</span>
-        <div className="mt-1.5 flex flex-wrap gap-2">
-          {DEFAULT_ICONS.map((i) => (
+        <div className="mt-1.5 grid grid-cols-8 gap-1.5">
+          {HABIT_ICON_NAMES.map((n) => (
             <button
               type="button"
-              key={i}
-              onClick={() => setIcon(i)}
-              className={`grid h-9 w-9 place-items-center rounded-lg border text-base ${icon === i ? 'border-[var(--color-brand-text)] bg-brand-500/10' : 'border-[var(--border)]'}`}
+              key={n}
+              onClick={() => setIcon(n)}
+              aria-label={`Icono ${n}`}
+              aria-pressed={icon === n}
+              className={`grid h-9 w-9 place-items-center rounded-lg border transition-colors ${icon === n ? 'border-[var(--color-brand-text)] bg-brand-500/10 text-[var(--color-brand-text)]' : 'border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'}`}
             >
-              {i}
+              <HabitIcon name={n} size={17} strokeWidth={2} />
             </button>
           ))}
         </div>

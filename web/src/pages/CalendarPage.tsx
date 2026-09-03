@@ -4,6 +4,7 @@ import { useHabits } from '../hooks/useHabits';
 import { completionsService } from '../services/completionsService';
 import { Card, EmptyState } from '../components/ui/primitives';
 import { toIsoDate, todayIso, formatDayLabel } from '../utils/dates';
+import { HabitIcon } from '../features/habits/habitIcons';
 
 function startOfMonth(year: number, month0: number) { return new Date(year, month0, 1); }
 function daysInMonth(year: number, month0: number) { return new Date(year, month0 + 1, 0).getDate(); }
@@ -103,7 +104,7 @@ export function CalendarPage() {
                   className="flex items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors"
                   style={{ borderColor: done ? h.color : 'var(--border)', background: done ? `color-mix(in srgb, ${h.color} 15%, transparent)` : 'transparent' }}
                 >
-                  <span>{h.icon}</span>
+                  <span style={{ color: h.color }}><HabitIcon name={h.icon} size={16} strokeWidth={2} /></span>
                   <span className="flex-1">{h.name}</span>
                   <span>{done ? <Check size={16} strokeWidth={2.5} /> : <span className="text-[var(--text-faint)]">—</span>}</span>
                 </button>

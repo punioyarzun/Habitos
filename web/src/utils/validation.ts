@@ -14,8 +14,8 @@ export function isPositiveFiniteNumber(v: unknown): v is number {
 }
 
 export const SWATCH_COLORS = [
-  '#5b9bd9', '#e07a5f', '#9b8ce0', '#e8b93d', '#4fae8e',
-  '#e1636b', '#77b6ea', '#f4a259', '#c77dff', '#34b76a',
+  '#6366f1', '#0ea5e9', '#14b8a6', '#10b981', '#f59e0b',
+  '#f97316', '#ef4444', '#ec4899', '#8b5cf6', '#64748b',
 ];
 
 export const DEFAULT_ICONS = ['⭐', '🏃', '📚', '💧', '🧘', '💻', '🚭', '🥗', '🌙', '💰', '🎯', '🚫'];

@@ -54,3 +54,35 @@ export function ProgressBar({ pct, color, className }: { pct: number; color?: st
     </div>
   );
 }
+
+/** Anillo de progreso circular (SVG). `pct` va de 0 a 1. El contenido central
+ *  (ícono, número…) se pasa como children. */
+export function ProgressRing({
+  pct, size = 48, stroke = 3, color, children, className,
+}: {
+  pct: number;
+  size?: number;
+  stroke?: number;
+  color?: string;
+  children?: ReactNode;
+  className?: string;
+}) {
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const clamped = Math.max(0, Math.min(1, pct));
+  const offset = circumference * (1 - clamped);
+  return (
+    <span className={clsx('relative inline-grid place-items-center', className)} style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="absolute inset-0 -rotate-90" aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-2)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color ?? 'var(--color-brand-500)'} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        />
+      </svg>
+      <span className="relative">{children}</span>
+    </span>
+  );
+}

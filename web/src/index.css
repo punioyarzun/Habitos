@@ -7,70 +7,66 @@
    ============================================================================ */
 
 @theme {
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
-  /* "Brass" — el acento interactivo primario. Bitácora = cuaderno de bitácora
-     de un capitán: hebillas y tinta de bronce sobre cuero oscuro, no un verde
-     ácido genérico de dashboard. Ingresos/gastos usan su propia paleta abajo,
-     separada a propósito — el acento de marca nunca se pisa con el semántico
-     financiero. */
-  --color-brand-50:  #fbf3e6;
-  --color-brand-100: #f3dfb8;
-  --color-brand-300: #e2b464;
-  --color-brand-500: #c98a2e;
-  --color-brand-600: #a86f22;
-  --color-brand-700: #86571b;
+  /* Acento índigo — estética SaaS moderna y sobria. Un solo acento de marca
+     para toda la interfaz; ingresos/gastos usan su propia paleta semántica
+     (verde/rojo) para no pisarse con la marca. */
+  --color-brand-50:  #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-300: #a5b4fc;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
 
-  --color-money-in:  #4f9d6e;
-  --color-money-out: #d16b64;
-  --color-danger:    #d16b64;
+  --color-money-in:  #10b981;
+  --color-money-out: #f43f5e;
+  --color-danger:    #f43f5e;
 
-  /* Fijo (no depende de light/dark): el ámbar de marca siempre necesita
-     texto oscuro encima para pasar contraste, sea cual sea el tema activo. */
-  --color-brand-ink: #1a1408;
+  /* Fijo: el índigo de marca siempre lleva texto blanco encima en rellenos
+     sólidos (botones, pestañas activas, badges), en cualquier tema. */
+  --color-brand-ink: #ffffff;
 
-  --radius-card: 14px;
+  --radius-card: 12px;
 }
 
+/* Grafito/slate oscuro por defecto. */
 :root {
   color-scheme: dark;
-  --bg: #12100d;
-  --bg-elevated: #18150f;
-  --surface: #1e1a13;
-  --surface-2: #262017;
-  --border: #362e20;
-  --text: #f3ede1;
-  --text-muted: #a89a80;
-  --text-faint: #7c715c;
+  --bg: #0b0e14;
+  --bg-elevated: #10131b;
+  --surface: #151922;
+  --surface-2: #1d222d;
+  --border: #262c39;
+  --text: #e7eaf0;
+  --text-muted: #949cad;
+  --text-faint: #626b7d;
 
-  /* Variantes de texto/ícono sobre el fondo de página (no confundir con
-     --color-brand-500/money-in/out, que son para RELLENOS sólidos siempre
-     emparejados con --color-brand-ink). Estas sí cambian por tema, porque
-     el mismo tono que se lee bien sobre fondo oscuro puede fallar contraste
-     como texto plano sobre fondo claro. */
-  --color-brand-text: #c98a2e;
-  --color-money-in-text: #4f9d6e;
-  --color-money-out-text: #d16b64;
-  --color-danger-text: #d16b64;
+  /* Variantes de texto/ícono sobre el fondo de página — se adaptan por tema
+     para conservar contraste (el tono legible sobre oscuro no lo es sobre claro). */
+  --color-brand-text: #a5b4fc;
+  --color-money-in-text: #34d399;
+  --color-money-out-text: #fb7185;
+  --color-danger-text: #fb7185;
 }
 
 [data-theme='light'] {
   color-scheme: light;
-  --bg: #faf7f1;
+  --bg: #f7f8fa;
   --bg-elevated: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f2ece0;
-  --border: #e2d8c4;
-  --text: #211c12;
-  --text-muted: #6b6047;
-  --text-faint: #8c8267;
+  --surface-2: #f1f3f7;
+  --border: #e5e8ee;
+  --text: #171a21;
+  --text-muted: #5b6472;
+  --text-faint: #94a0b0;
 
-  --color-brand-text: #8a5c1a;
-  --color-money-in-text: #296b42;
-  --color-money-out-text: #a83c35;
-  --color-danger-text: #a83c35;
+  --color-brand-text: #4f46e5;
+  --color-money-in-text: #05966a;
+  --color-money-out-text: #e11d48;
+  --color-danger-text: #e11d48;
 }
 
 html, body, #root { height: 100%; }

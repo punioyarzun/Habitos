@@ -11,6 +11,7 @@ import { BarChart3, Receipt, Trophy } from 'lucide-react';
 import { formatCLP } from '../utils/currency';
 import { addDays, todayIso } from '../utils/dates';
 import { completionRateInRange, scheduledAndDoneInRange } from '../utils/streaks';
+import { HabitIcon } from '../features/habits/habitIcons';
 
 type Period = '30d' | '3m' | '6m' | '1y';
 const PERIODS: { key: Period; label: string; days: number }[] = [
@@ -192,7 +193,7 @@ export function StatisticsPage() {
                 <div className="flex flex-col gap-2">
                   {habitRanking.map((h) => (
                     <div key={h.id} className="flex items-center gap-3 text-sm">
-                      <span>{h.icon}</span>
+                      <span style={{ color: h.color }}><HabitIcon name={h.icon} size={16} strokeWidth={2} /></span>
                       <span className="w-32 shrink-0 truncate">{h.name}</span>
                       <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
                         <div className="h-full rounded-full" style={{ width: `${Math.round(h.periodRate * 100)}%`, background: h.color }} />

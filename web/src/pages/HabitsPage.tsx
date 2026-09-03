@@ -19,7 +19,7 @@ export function HabitsPage() {
   const menuHabit = habits.find((h) => h.id === menuFor) ?? null;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-3xl">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="font-display text-xl font-semibold">Hábitos</h1>
@@ -41,8 +41,8 @@ export function HabitsPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Skeleton className="h-36" /><Skeleton className="h-36" /><Skeleton className="h-36" /><Skeleton className="h-36" />
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
@@ -52,7 +52,7 @@ export function HabitsPage() {
           action={filter === 'active' ? <Button onClick={() => setShowCreate(true)}>Crear hábito</Button> : undefined}
         />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {filtered.map((h) => (
             <HabitCard key={h.id} habit={h} onToggleToday={toggleToday} onOpenMenu={setMenuFor} categoryName={h.category_id ? categoryNameById.get(h.category_id) : undefined} />
           ))}
