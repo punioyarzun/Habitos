@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useReminders } from './useReminders';
+import { useToast } from './useToast';
+import { emailService } from '../services/emailService';
 import type { Reminder } from '../types/domain';
 import { isoNow } from '../utils/streaks';
 import { occursOn, isCompletedOn, nextOccurrence, PRIORITY_ORDER } from '../utils/reminders';
@@ -7,6 +9,7 @@ import { timeToMinutes, formatTimeShort } from '../utils/time';
 import { formatDateShort } from '../utils/dates';
 
 const NOTIF_PREF_KEY = 'bitacora:notifications';
+const EMAIL_PREF_KEY = 'bitacora:emailReminders';
 
 type Permission = 'default' | 'granted' | 'denied' | 'unsupported';
 
@@ -23,6 +26,8 @@ interface ReminderCenterValue extends ReturnType<typeof useReminders> {
   notificationsEnabled: boolean;
   setNotificationsEnabled: (v: boolean) => void;
   requestPermission: () => Promise<void>;
+  emailRemindersEnabled: boolean;
+  setEmailRemindersEnabled: (v: boolean) => void;
   announceCreated: (reminder: Reminder) => Promise<void>;
 }
 
@@ -31,7 +36,16 @@ const Ctx = createContext<ReminderCenterValue | null>(null);
 export function ReminderCenterProvider({ children }: { children: ReactNode }) {
   const rc = useReminders();
   const { reminders, completedDatesByReminder } = rc;
+  const { push } = useToast();
   const today = isoNow();
+
+  const [emailRemindersEnabled, setEmailRemindersEnabledState] = useState<boolean>(() => {
+    try { return localStorage.getItem(EMAIL_PREF_KEY) === 'on'; } catch { return false; }
+  });
+  function setEmailRemindersEnabled(v: boolean) {
+    setEmailRemindersEnabledState(v);
+    try { localStorage.setItem(EMAIL_PREF_KEY, v ? 'on' : 'off'); } catch { /* ignore */ }
+  }
 
   const [permission, setPermission] = useState<Permission>(currentPermission);
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(() => {
@@ -63,6 +77,19 @@ export function ReminderCenterProvider({ children }: { children: ReactNode }) {
    * la hora la agenda el efecto de abajo (con la app abierta).
    */
   async function announceCreated(reminder: Reminder) {
+    const t = isoNow();
+    const next = nextOccurrence(reminder, t);
+    let when = '';
+    if (next === t) when = reminder.remind_time ? `hoy a las ${formatTimeShort(reminder.remind_time)}` : 'hoy';
+    else if (next) when = `${formatDateShort(next)}${reminder.remind_time ? ` · ${formatTimeShort(reminder.remind_time)}` : ''}`;
+
+    // Correo (opt-in, independiente del permiso de notificaciones del navegador).
+    if (emailRemindersEnabled) {
+      emailService.sendReminderEmail({ title: reminder.title, description: reminder.description, when })
+        .then((ok) => { if (ok) push('Te enviamos un correo con el recordatorio.', 'ok'); });
+    }
+
+    // Notificación del navegador.
     if (typeof Notification === 'undefined') return;
     let perm = permission;
     let enabled = notificationsEnabled;
@@ -74,12 +101,6 @@ export function ReminderCenterProvider({ children }: { children: ReactNode }) {
       } catch { /* ignore */ }
     }
     if (perm !== 'granted' || !enabled) return;
-
-    const t = isoNow();
-    const next = nextOccurrence(reminder, t);
-    let when = '';
-    if (next === t) when = reminder.remind_time ? `hoy a las ${formatTimeShort(reminder.remind_time)}` : 'hoy';
-    else if (next) when = `${formatDateShort(next)}${reminder.remind_time ? ` · ${formatTimeShort(reminder.remind_time)}` : ''}`;
     try {
       new Notification('Recordatorio creado', {
         body: when ? `${reminder.title} — ${when}` : reminder.title,
@@ -169,6 +190,8 @@ export function ReminderCenterProvider({ children }: { children: ReactNode }) {
     notificationsEnabled,
     setNotificationsEnabled,
     requestPermission,
+    emailRemindersEnabled,
+    setEmailRemindersEnabled,
     announceCreated,
   };
 

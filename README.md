@@ -17,7 +17,8 @@ de rollback — **no se despliega**.
 | `web/` | **App en producción.** React 19 + TypeScript + Vite + Tailwind v4 + React Router + Supabase-js. Ver `web/README` (esta misma sección cubre su configuración). |
 | `supabase/schema_v2.sql` | Esquema relacional base: `profiles`, `habit_categories`, `habits`, `habit_completions`, `financial_categories`, `financial_transactions`, todas con RLS. |
 | `supabase/schema_gym_reminders.sql` | **Extensión Gimnasio + Recordatorios** (aditiva e idempotente): `workout_routines`, `routine_days`, `routine_exercises`, `workout_sessions`, `workout_set_logs`, `reminders`, `reminder_completions`, todas con RLS. Correr después de `schema_v2.sql`. |
-| `NOTIFICACIONES.md` | Arquitectura del sistema de notificaciones (in-app + navegador) y el camino para push en segundo plano. |
+| `supabase/functions/send-reminder-email/` | **Edge Function** que envía el recordatorio por correo (Resend). Opcional: ver `NOTIFICACIONES.md` para desplegarla. |
+| `NOTIFICACIONES.md` | Arquitectura de notificaciones (in-app + navegador + email) y el camino para push en segundo plano. |
 | `supabase/migrate-to-relational.mjs` | Script único para migrar datos del modelo viejo (un JSON por usuario) al esquema relacional. Correr una sola vez, manualmente. |
 | `supabase/schema.sql` | Esquema **viejo** (un JSON por usuario). Solo relevante si aún corres `legacy-vanilla-app/`. |
 | `netlify/functions/bitacora.mjs` | Función serverless del modelo viejo. Ya no la usa la app en producción (React habla directo con Supabase, protegido por RLS) — se conserva por si necesitas lógica server-side con privilegios elevados a futuro. |
@@ -71,8 +72,11 @@ completo (constraints, índices, triggers).
 2. Ejecuta `supabase/schema_v2.sql` en el SQL Editor.
 2b. Ejecuta `supabase/schema_gym_reminders.sql` (para Gimnasio + Recordatorios). Es
    aditivo e idempotente: no toca las tablas existentes y se puede correr de nuevo sin
-   riesgo. **Sin este paso, las secciones Gimnasio y Recordatorios no tendrán dónde
-   guardar datos.**
+   riesgo (incluye un `ALTER` que amplía los tipos de rutina en instalaciones previas).
+   **Sin este paso, las secciones Gimnasio y Recordatorios no tendrán dónde guardar datos.**
+2c. (Opcional) Para recibir recordatorios por correo, despliega la Edge Function
+   `send-reminder-email` — pasos en `NOTIFICACIONES.md`. Si no la despliegas, la app
+   usa las notificaciones del navegador.
 3. **Si ya tenías datos reales en el modelo viejo** (`bitacora_data`), sigue
    `supabase/migrate-to-relational.mjs` (instrucciones dentro del archivo: correr con
    `--dry-run` primero, hacer backup, luego correr real). Es un script manual, no se

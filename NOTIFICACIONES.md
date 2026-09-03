@@ -35,24 +35,39 @@ de verdad, y lo que no existe está documentado como paso futuro, no fingido.
   título y cuándo avisará ("hoy a las 10:00", "5 sept · 09:00"). La notificación
   puntual a la hora exacta la agenda el scheduler de arriba (con la app abierta).
 
-## Email de recordatorios (opcional — requiere backend)
+## Email de recordatorios (implementado — falta desplegar la función)
 
-Enviar un correo al crear un recordatorio (o a su hora) **no se puede hacer solo desde
-el navegador**: hace falta un servidor que envíe el email. No se dejó ninguna simulación.
-El camino real, listo para implementar:
+El código ya está listo: la Edge Function vive en
+`supabase/functions/send-reminder-email/index.ts` y el cliente la llama
+(`services/emailService.ts`) cuando el usuario activa **Configuración →
+Recordatorios por correo**. Solo falta desplegarla y darle una API key.
 
-1. Proveedor de email transaccional (p. ej. **Resend**, SendGrid o el SMTP de Supabase)
-   con una API key guardada como secreto en Supabase.
-2. Una **Supabase Edge Function** `send-reminder-email` que reciba el recordatorio y
-   mande el correo con la librería del proveedor. El cliente ya tiene el `email` del
-   usuario en la sesión.
-3. Para el envío a la hora exacta (no solo al crear), un **cron** (Supabase Scheduled
-   Functions / pg_cron) que corra cada X minutos, calcule con `occursOn()` qué
-   recordatorios vencen y dispare los correos.
-4. Ajustar la CSP/`connect-src` si el cliente llamara directo a la función.
+La función **valida el JWT** del usuario y envía **solo a su propio correo** (nunca a
+una dirección del body), así que no se puede abusar para spam. El endpoint vive en
+`https://<ref>.supabase.co/functions/v1/...` — el mismo host que ya permite la CSP, no
+hay que tocar `connect-src`.
 
-Mientras no exista ese backend, la app cubre el requisito con la **notificación del
-navegador** (el "o me indique alguna notificación" del pedido).
+### Desplegar (una vez)
+1. Crea una cuenta en [resend.com](https://resend.com) y genera una API key. (Para
+   pruebas sirve el remitente sandbox `onboarding@resend.dev`; para producción,
+   verifica tu dominio y usa `no-reply@tudominio.com`.)
+2. Con el [CLI de Supabase](https://supabase.com/docs/guides/cli):
+   ```bash
+   supabase login
+   supabase link --project-ref <tu-ref>
+   supabase secrets set RESEND_API_KEY=re_xxx REMINDER_FROM="Bitácora <onboarding@resend.dev>"
+   supabase functions deploy send-reminder-email
+   ```
+3. Activa el toggle en Configuración y crea un recordatorio: te debe llegar el correo.
+
+Si no la despliegas, no pasa nada: `emailService` degrada silenciosamente y la app
+sigue avisando con la **notificación del navegador**.
+
+### Envío a la hora exacta (no solo al crear) — paso futuro
+Hoy el correo se manda **al crear** el recordatorio. Para que llegue **a la hora**
+programada (incluso con la app cerrada), agrega un **cron** (Supabase Scheduled
+Functions / pg_cron) que corra cada pocos minutos, calcule con `occursOn()` qué
+recordatorios vencen y llame a la misma lógica de envío.
 
 ## Qué NO está implementado (y por qué)
 

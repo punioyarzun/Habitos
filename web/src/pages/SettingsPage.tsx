@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button';
 export function SettingsPage() {
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { permission, notificationsEnabled, setNotificationsEnabled, requestPermission } = useReminderCenter();
+  const { permission, notificationsEnabled, setNotificationsEnabled, requestPermission, emailRemindersEnabled, setEmailRemindersEnabled } = useReminderCenter();
 
   return (
     <div className="mx-auto max-w-lg">
@@ -46,8 +46,20 @@ export function SettingsPage() {
             </button>
           </label>
         )}
+        <label className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
+          <span className="text-sm text-[var(--text-muted)]">Enviarme un correo al crear un recordatorio.</span>
+          <button
+            onClick={() => setEmailRemindersEnabled(!emailRemindersEnabled)}
+            role="switch"
+            aria-checked={emailRemindersEnabled}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${emailRemindersEnabled ? 'bg-brand-500' : 'bg-[var(--surface-2)]'}`}
+          >
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${emailRemindersEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </button>
+        </label>
+
         <p className="mt-3 border-t border-[var(--border)] pt-3 text-xs text-[var(--text-faint)]">
-          Las notificaciones en segundo plano (con la app cerrada) requieren notificaciones push, disponibles como mejora futura. Ver <span className="font-mono">NOTIFICACIONES.md</span>.
+          El correo requiere desplegar la Edge Function <span className="font-mono">send-reminder-email</span> (ver <span className="font-mono">NOTIFICACIONES.md</span>). Las notificaciones en segundo plano (app cerrada) requieren push, documentado como mejora futura.
         </p>
       </Card>
 

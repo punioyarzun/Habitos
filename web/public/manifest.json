@@ -1,12 +1,12 @@
 {
-  "name": "Bitácora — hábitos y gastos",
+  "name": "Bitácora — hábitos, gimnasio y finanzas",
   "short_name": "Bitácora",
-  "description": "Registro diario de hábitos y control de gastos, sincronizado en la nube.",
+  "description": "Plataforma personal de seguimiento: hábitos, entrenamientos, recordatorios y finanzas, sincronizados en la nube.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#12100d",
-  "theme_color": "#12100d",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
   "lang": "es",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
