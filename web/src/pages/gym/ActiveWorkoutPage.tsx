@@ -17,7 +17,7 @@ import { todayIso } from '../../utils/dates';
 import { useToast } from '../../hooks/useToast';
 
 interface WorkSet { id: string; reps: string; weight: string; done: boolean; }
-interface WorkExercise { id: string; name: string; muscle_group: string | null; rest_seconds: number; sets: WorkSet[]; }
+interface WorkExercise { id: string; name: string; muscle_group: string | null; rest_seconds: number; targetSets: number; targetReps: number; sets: WorkSet[]; }
 
 let uid = 0;
 const nextId = () => `w${uid++}`;
@@ -29,6 +29,7 @@ function makeSets(count: number, reps: number, weight: number | null): WorkSet[]
 }
 
 const HABIT_RE = /entren|gimnas|gym|ejercic/i;
+const BETWEEN_EXERCISES_REST = 120; // 2 minutos de descanso entre ejercicios
 
 export function ActiveWorkoutPage() {
   const { dayId } = useParams();
@@ -40,7 +41,7 @@ export function ActiveWorkoutPage() {
   const [routineId, setRoutineId] = useState<string | null>(null);
   const [exercises, setExercises] = useState<WorkExercise[]>([]);
   const [elapsed, setElapsed] = useState(0);
-  const [rest, setRest] = useState<{ seconds: number; key: number } | null>(null);
+  const [rest, setRest] = useState<{ seconds: number; key: number; label: string } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [showFinish, setShowFinish] = useState(false);
   const [showDiscard, setShowDiscard] = useState(false);
@@ -61,6 +62,7 @@ export function ActiveWorkoutPage() {
             setTitle(data.routine ? `${data.routine.name} — ${data.day.name}` : data.day.name);
             setExercises(data.exercises.map((e) => ({
               id: nextId(), name: e.name, muscle_group: e.muscle_group, rest_seconds: e.rest_seconds,
+              targetSets: e.target_sets, targetReps: e.target_reps,
               sets: makeSets(e.target_sets, e.target_reps, e.target_weight),
             })));
           }
@@ -98,7 +100,19 @@ export function ActiveWorkoutPage() {
     const set = ex.sets.find((s) => s.id === setId);
     const willBeDone = !set?.done;
     updateSet(ex.id, setId, { done: willBeDone });
-    if (willBeDone && ex.rest_seconds > 0) setRest({ seconds: ex.rest_seconds, key: Date.now() });
+    if (!willBeDone) return; // al desmarcar no arranca descanso
+
+    // ¿Este set completa el ejercicio? (no quedan otros sets sin marcar)
+    const otherUndone = ex.sets.filter((s) => s.id !== setId && !s.done).length;
+    const completesExercise = otherUndone === 0;
+
+    if (completesExercise) {
+      // Descanso automático entre ejercicios: 2 minutos.
+      setRest({ seconds: BETWEEN_EXERCISES_REST, key: Date.now(), label: 'Descanso entre ejercicios · 2 min' });
+    } else if (ex.rest_seconds > 0) {
+      // Descanso entre series con el tiempo configurado del ejercicio.
+      setRest({ seconds: ex.rest_seconds, key: Date.now(), label: `Descanso · ${ex.name}` });
+    }
   }
 
   function addSet(exId: string) {
@@ -118,6 +132,7 @@ export function ActiveWorkoutPage() {
     setExercises((prev) => [...prev, {
       id: nextId(), name: input.name, muscle_group: input.muscle_group ?? null,
       rest_seconds: input.rest_seconds ?? 90,
+      targetSets: input.target_sets ?? 3, targetReps: input.target_reps ?? 10,
       sets: makeSets(input.target_sets ?? 3, input.target_reps ?? 10, input.target_weight ?? null),
     }]);
   }
@@ -186,7 +201,9 @@ export function ActiveWorkoutPage() {
             <div className="mb-2 flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="truncate font-display font-semibold">{ex.name}</p>
-                {ex.muscle_group && <p className="text-xs text-[var(--text-muted)]">{ex.muscle_group}</p>}
+                <p className="text-xs text-[var(--text-muted)]">
+                  {ex.muscle_group ? `${ex.muscle_group} · ` : ''}Objetivo {ex.targetSets}×{ex.targetReps} · pausa {ex.rest_seconds}s
+                </p>
               </div>
               <button onClick={() => removeExercise(ex.id)} className="shrink-0 rounded-lg p-1 text-[var(--text-faint)] hover:text-[var(--color-danger-text)]" aria-label="Quitar ejercicio"><X size={15} strokeWidth={2} /></button>
             </div>
@@ -237,7 +254,7 @@ export function ActiveWorkoutPage() {
         )}
       </div>
 
-      {rest && <RestTimer key={rest.key} seconds={rest.seconds} onClose={() => setRest(null)} />}
+      {rest && <RestTimer key={rest.key} seconds={rest.seconds} label={rest.label} onClose={() => setRest(null)} />}
 
       <ExerciseFormModal open={addOpen} onClose={() => setAddOpen(false)} onSave={addExercise} />
 

@@ -38,13 +38,42 @@ export const HABIT_ICONS: Record<string, LucideIcon> = {
 
 export const HABIT_ICON_NAMES = Object.keys(HABIT_ICONS);
 
-/**
- * Renderiza el ícono de un hábito. Si `name` es una clave conocida usa el ícono
- * de línea (lucide); si no (p. ej. un emoji de un hábito antiguo), lo muestra
- * como texto para no romper datos existentes.
- */
+/** Mapa de emojis antiguos → clave de ícono de línea. Cubre los hábitos creados
+ *  antes de migrar a lucide, para que jamás se muestre un emoji. */
+const EMOJI_TO_ICON: Record<string, string> = {
+  '⭐': 'spark', '🌟': 'spark', '✨': 'spark',
+  '🏃': 'run', '🏃‍♂️': 'run', '🏃‍♀️': 'run', '👟': 'run',
+  '🏋': 'dumbbell', '🏋️': 'dumbbell', '💪': 'dumbbell', '🤸': 'dumbbell',
+  '🚴': 'bike', '🚲': 'bike',
+  '📚': 'book', '📖': 'book', '📓': 'book', '🎓': 'study', '✏️': 'write', '✍️': 'write', '📝': 'write', '🖊️': 'write',
+  '💧': 'water', '🚰': 'water', '💦': 'water',
+  '🧘': 'meditate', '🧠': 'meditate',
+  '💻': 'code', '🖥️': 'laptop', '⌨️': 'code', '💼': 'work',
+  '🚭': 'nosmoke', '🚫': 'nosmoke', '⛔': 'nosmoke', '🛑': 'nosmoke', '🚬': 'nosmoke',
+  '🥗': 'salad', '🥦': 'salad', '🍎': 'apple', '🍏': 'apple', '🍽️': 'salad',
+  '☕': 'coffee', '🍵': 'coffee',
+  '🌙': 'moon', '🌛': 'moon', '☀️': 'sun', '🌞': 'sun', '🛏️': 'sleep', '😴': 'sleep', '💤': 'sleep',
+  '💰': 'money', '💵': 'money', '💸': 'money', '🏦': 'savings', '🐷': 'savings',
+  '🎯': 'target', '✅': 'target', '☑️': 'target', '🔥': 'target',
+  '🎵': 'music', '🎶': 'music', '🎸': 'music',
+  '❤️': 'heart', '💓': 'heart', '🩺': 'heart',
+  '🌱': 'leaf', '🌿': 'leaf', '🍃': 'leaf',
+};
+
+/** Resuelve el nombre a un componente de ícono de línea. Si es una clave conocida
+ *  o un emoji mapeado, lo usa; en cualquier otro caso cae a un ícono neutro
+ *  (nunca renderiza el emoji como texto). */
+function resolveIcon(name: string): LucideIcon {
+  if (HABIT_ICONS[name]) return HABIT_ICONS[name];
+  const stripped = name.replace(/️/g, '');
+  const key = EMOJI_TO_ICON[name] ?? EMOJI_TO_ICON[stripped];
+  if (key && HABIT_ICONS[key]) return HABIT_ICONS[key];
+  return HABIT_ICONS.target;
+}
+
+/** Renderiza el ícono de un hábito como ícono de línea (lucide), migrando en
+ *  caliente cualquier emoji antiguo. */
 export function HabitIcon({ name, size = 18, strokeWidth = 2, className }: { name: string; size?: number; strokeWidth?: number; className?: string }) {
-  const Icon = HABIT_ICONS[name];
-  if (Icon) return <Icon size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
-  return <span className={className} style={{ fontSize: size, lineHeight: 1 }} aria-hidden="true">{name}</span>;
+  const Icon = resolveIcon(name);
+  return <Icon size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
 }

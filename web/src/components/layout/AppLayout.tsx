@@ -15,10 +15,10 @@ interface NavItem { to: string; label: string; Icon: LucideIcon; end?: boolean; 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Inicio', Icon: LayoutGrid, end: true },
   { to: '/habitos', label: 'Hábitos', Icon: CheckCircle2 },
+  { to: '/calendario', label: 'Calendario', Icon: CalendarDays },
   { to: '/gimnasio', label: 'Gimnasio', Icon: Dumbbell },
   { to: '/recordatorios', label: 'Recordatorios', Icon: AlarmClock },
   { to: '/finanzas', label: 'Finanzas', Icon: Wallet },
-  { to: '/calendario', label: 'Calendario', Icon: CalendarDays },
   { to: '/estadisticas', label: 'Estadísticas', Icon: BarChart3 },
   { to: '/configuracion', label: 'Configuración', Icon: Settings },
 ];
