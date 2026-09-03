@@ -1,3 +1,5 @@
+import { Dumbbell, Repeat, ArrowUpDown, Sprout } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { RoutineType } from '../types/domain';
 
 /** Ejercicio dentro de una plantilla de preset (sin ids — se generan al crear). */
@@ -20,7 +22,7 @@ export interface RoutinePreset {
   type: Exclude<RoutineType, 'custom'>;
   name: string;
   description: string;
-  icon: string;
+  icon: LucideIcon;
   days: PresetDay[];
 }
 
@@ -36,7 +38,7 @@ export const ROUTINE_PRESETS: RoutinePreset[] = [
     type: 'fullbody',
     name: 'Full Body',
     description: 'Cuerpo completo, 3 días por semana. Ideal si entrenas pocos días.',
-    icon: '🏋️',
+    icon: Dumbbell,
     days: [
       {
         name: 'Full Body A', weekday: 1,
@@ -79,7 +81,7 @@ export const ROUTINE_PRESETS: RoutinePreset[] = [
     type: 'ppl',
     name: 'Push Pull Legs',
     description: 'Empuje, tirón y piernas. 6 días (o repite en 3). Volumen alto.',
-    icon: '🔁',
+    icon: Repeat,
     days: [
       {
         name: 'Push (Empuje)', weekday: 1,
@@ -137,7 +139,7 @@ export const ROUTINE_PRESETS: RoutinePreset[] = [
     type: 'upper_lower',
     name: 'Tren Superior / Tren Inferior',
     description: 'Alterna torso y piernas. 4 días por semana, buen equilibrio.',
-    icon: '⚖️',
+    icon: ArrowUpDown,
     days: [
       {
         name: 'Tren Superior A', weekday: 1,
@@ -187,7 +189,7 @@ export const ROUTINE_PRESETS: RoutinePreset[] = [
     type: 'beginner',
     name: 'Principiante',
     description: 'Simple y fácil de seguir. 3 días, movimientos básicos.',
-    icon: '🌱',
+    icon: Sprout,
     days: [
       {
         name: 'Día 1', weekday: 1,

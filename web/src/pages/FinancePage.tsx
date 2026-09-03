@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { Card, EmptyState, Skeleton } from '../components/ui/primitives';
-import { Receipt } from 'lucide-react';
+import { Receipt, Trash2, TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { MonthNav } from '../components/ui/MonthNav';
 import { formatCLP } from '../utils/currency';
 import { todayIso, formatDateShort } from '../utils/dates';
 import type { TransactionType } from '../types/domain';
@@ -48,16 +49,25 @@ export function FinancePage() {
     <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold capitalize">Finanzas — {monthLabel}</h1>
-        <div className="flex gap-1">
-          <button onClick={() => setCursor((c) => c.month0 === 0 ? { year: c.year - 1, month0: 11 } : { year: c.year, month0: c.month0 - 1 })} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]">‹</button>
-          <button onClick={() => setCursor((c) => c.month0 === 11 ? { year: c.year + 1, month0: 0 } : { year: c.year, month0: c.month0 + 1 })} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]">›</button>
-        </div>
+        <MonthNav
+          onPrev={() => setCursor((c) => c.month0 === 0 ? { year: c.year - 1, month0: 11 } : { year: c.year, month0: c.month0 - 1 })}
+          onNext={() => setCursor((c) => c.month0 === 11 ? { year: c.year + 1, month0: 0 } : { year: c.year, month0: c.month0 + 1 })}
+        />
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Card className="p-4"><p className="text-lg font-display font-bold text-[var(--color-money-in-text)]">{formatCLP(summary.ingresos)}</p><p className="text-xs text-[var(--text-muted)]">Ingresos</p></Card>
-        <Card className="p-4"><p className="text-lg font-display font-bold text-[var(--color-money-out-text)]">{formatCLP(summary.gastos)}</p><p className="text-xs text-[var(--text-muted)]">Gastos</p></Card>
-        <Card className="p-4"><p className={`text-lg font-display font-bold ${summary.balance >= 0 ? 'text-[var(--text)]' : 'text-[var(--color-money-out-text)]'}`}>{formatCLP(summary.balance)}</p><p className="text-xs text-[var(--text-muted)]">Balance</p></Card>
+        <Card className="p-4">
+          <p className="flex items-center gap-1.5 font-display text-base font-bold text-[var(--color-money-in-text)] sm:text-lg"><TrendingUp size={15} strokeWidth={2} className="shrink-0" />{formatCLP(summary.ingresos)}</p>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Ingresos</p>
+        </Card>
+        <Card className="p-4">
+          <p className="flex items-center gap-1.5 font-display text-base font-bold text-[var(--color-money-out-text)] sm:text-lg"><TrendingDown size={15} strokeWidth={2} className="shrink-0" />{formatCLP(summary.gastos)}</p>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Gastos</p>
+        </Card>
+        <Card className="p-4">
+          <p className={`flex items-center gap-1.5 font-display text-base font-bold sm:text-lg ${summary.balance >= 0 ? 'text-[var(--text)]' : 'text-[var(--color-money-out-text)]'}`}><Scale size={15} strokeWidth={2} className="shrink-0 text-[var(--text-muted)]" />{formatCLP(summary.balance)}</p>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Balance</p>
+        </Card>
       </div>
 
       <Card className="mt-4 p-4">
@@ -100,7 +110,7 @@ export function FinancePage() {
                 <span className={`shrink-0 font-mono text-sm font-semibold ${t.type === 'ingreso' ? 'text-[var(--color-money-in-text)]' : 'text-[var(--color-money-out-text)]'}`}>
                   {t.type === 'ingreso' ? '+' : '-'}{formatCLP(t.amount)}
                 </span>
-                <button onClick={() => removeTransaction(t.id)} className="shrink-0 text-[var(--text-faint)] hover:text-[var(--color-danger-text)]" aria-label="Eliminar movimiento">✕</button>
+                <button onClick={() => removeTransaction(t.id)} className="shrink-0 rounded-lg p-1.5 text-[var(--text-faint)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--color-danger-text)]" aria-label="Eliminar movimiento"><Trash2 size={15} strokeWidth={2} /></button>
               </div>
             );
           })}

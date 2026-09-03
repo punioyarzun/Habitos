@@ -55,7 +55,7 @@ export function NotificationBell() {
 
           <div className="max-h-80 overflow-y-auto scrollbar-thin">
             {items.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">Nada pendiente para hoy 🎉</p>
+              <p className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">Nada pendiente para hoy.</p>
             ) : (
               items.map(({ r, overdue: isOver }) => (
                 <div key={r.id} className="flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-2)]">

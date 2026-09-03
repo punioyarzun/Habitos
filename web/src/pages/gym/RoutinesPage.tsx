@@ -90,7 +90,9 @@ export function RoutinesPage() {
                   onClick={() => handlePreset(i)}
                   className="flex items-center gap-3 rounded-lg border border-[var(--border)] p-3 text-left transition-colors hover:border-[var(--color-brand-text)]/60 hover:bg-[var(--surface-2)] disabled:opacity-60"
                 >
-                  <span className="text-xl">{p.icon}</span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-500/12 text-[var(--color-brand-text)]">
+                    <p.icon size={18} strokeWidth={2} />
+                  </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-medium">{p.name}</span>
                     <span className="block text-xs text-[var(--text-muted)]">{p.description}</span>

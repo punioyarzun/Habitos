@@ -5,6 +5,7 @@ import { completionsService } from '../services/completionsService';
 import { Card, EmptyState } from '../components/ui/primitives';
 import { toIsoDate, todayIso, formatDayLabel } from '../utils/dates';
 import { HabitIcon } from '../features/habits/habitIcons';
+import { MonthNav } from '../components/ui/MonthNav';
 
 function startOfMonth(year: number, month0: number) { return new Date(year, month0, 1); }
 function daysInMonth(year: number, month0: number) { return new Date(year, month0 + 1, 0).getDate(); }
@@ -55,11 +56,11 @@ export function CalendarPage() {
     <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold capitalize">{monthLabel}</h1>
-        <div className="flex gap-1">
-          <button onClick={() => setCursor((c) => c.month0 === 0 ? { year: c.year - 1, month0: 11 } : { year: c.year, month0: c.month0 - 1 })} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]">‹</button>
-          <button onClick={() => { const d = new Date(); setCursor({ year: d.getFullYear(), month0: d.getMonth() }); }} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-2)]">Hoy</button>
-          <button onClick={() => setCursor((c) => c.month0 === 11 ? { year: c.year + 1, month0: 0 } : { year: c.year, month0: c.month0 + 1 })} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]">›</button>
-        </div>
+        <MonthNav
+          onPrev={() => setCursor((c) => c.month0 === 0 ? { year: c.year - 1, month0: 11 } : { year: c.year, month0: c.month0 - 1 })}
+          onToday={() => { const d = new Date(); setCursor({ year: d.getFullYear(), month0: d.getMonth() }); }}
+          onNext={() => setCursor((c) => c.month0 === 11 ? { year: c.year + 1, month0: 0 } : { year: c.year, month0: c.month0 + 1 })}
+        />
       </div>
 
       {activeHabits.length === 0 ? (

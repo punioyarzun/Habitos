@@ -7,6 +7,7 @@ import { Card, EmptyState, Skeleton } from '../components/ui/primitives';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Tabs } from '../components/ui/Tabs';
+import { MonthNav } from '../components/ui/MonthNav';
 import { ReminderItem } from '../features/reminders/ReminderItem';
 import { ReminderFormModal } from '../features/reminders/ReminderFormModal';
 import { occursOn, isCompletedOn, nextOccurrence, isRecurring, PRIORITY_ORDER } from '../utils/reminders';
@@ -177,11 +178,11 @@ export function RemindersPage() {
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-display text-base font-semibold capitalize">{monthLabel}</h2>
-                <div className="flex gap-1">
-                  <button onClick={() => setCalCursor((c) => c.month0 === 0 ? { year: c.year - 1, month0: 11 } : { year: c.year, month0: c.month0 - 1 })} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]">‹</button>
-                  <button onClick={() => { const d = new Date(); setCalCursor({ year: d.getFullYear(), month0: d.getMonth() }); setCalSelected(todayIso()); }} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-2)]">Hoy</button>
-                  <button onClick={() => setCalCursor((c) => c.month0 === 11 ? { year: c.year + 1, month0: 0 } : { year: c.year, month0: c.month0 + 1 })} className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]">›</button>
-                </div>
+                <MonthNav
+                  onPrev={() => setCalCursor((c) => c.month0 === 0 ? { year: c.year - 1, month0: 11 } : { year: c.year, month0: c.month0 - 1 })}
+                  onToday={() => { const d = new Date(); setCalCursor({ year: d.getFullYear(), month0: d.getMonth() }); setCalSelected(todayIso()); }}
+                  onNext={() => setCalCursor((c) => c.month0 === 11 ? { year: c.year + 1, month0: 0 } : { year: c.year, month0: c.month0 + 1 })}
+                />
               </div>
               <Card className="p-4">
                 <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-medium text-[var(--text-faint)]">
