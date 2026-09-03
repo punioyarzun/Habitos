@@ -45,11 +45,12 @@ export function useReminders() {
     return map;
   }, [completions]);
 
-  async function create(input: ReminderInput) {
+  async function create(input: ReminderInput): Promise<Reminder> {
     try {
       const r = await remindersService.create(input);
       setReminders((prev) => [...prev, r]);
       push('Recordatorio creado.', 'ok');
+      return r;
     } catch (e) {
       push(e instanceof Error ? e.message : 'No se pudo crear.', 'err');
       throw e;

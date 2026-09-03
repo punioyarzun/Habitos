@@ -28,7 +28,7 @@ function daysInMonth(year: number, month0: number) { return new Date(year, month
 export function RemindersPage() {
   const {
     reminders, completedDatesByReminder, loading, dueToday, overdue,
-    create, update, remove, toggleComplete, reschedule,
+    create, update, remove, toggleComplete, reschedule, announceCreated,
   } = useReminderCenter();
 
   const [view, setView] = useState<View>('hoy');
@@ -98,8 +98,12 @@ export function RemindersPage() {
   }, [reminders, calSelected]);
 
   async function handleSave(input: ReminderInput) {
-    if (editing) await update(editing.id, input);
-    else await create(input);
+    if (editing) {
+      await update(editing.id, input);
+    } else {
+      const created = await create(input);
+      if (created) await announceCreated(created);
+    }
     setEditing(null);
   }
 

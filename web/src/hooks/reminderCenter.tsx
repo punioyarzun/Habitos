@@ -2,8 +2,9 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { useReminders } from './useReminders';
 import type { Reminder } from '../types/domain';
 import { isoNow } from '../utils/streaks';
-import { occursOn, isCompletedOn, PRIORITY_ORDER } from '../utils/reminders';
-import { timeToMinutes } from '../utils/time';
+import { occursOn, isCompletedOn, nextOccurrence, PRIORITY_ORDER } from '../utils/reminders';
+import { timeToMinutes, formatTimeShort } from '../utils/time';
+import { formatDateShort } from '../utils/dates';
 
 const NOTIF_PREF_KEY = 'bitacora:notifications';
 
@@ -22,6 +23,7 @@ interface ReminderCenterValue extends ReturnType<typeof useReminders> {
   notificationsEnabled: boolean;
   setNotificationsEnabled: (v: boolean) => void;
   requestPermission: () => Promise<void>;
+  announceCreated: (reminder: Reminder) => Promise<void>;
 }
 
 const Ctx = createContext<ReminderCenterValue | null>(null);
@@ -52,6 +54,38 @@ export function ReminderCenterProvider({ children }: { children: ReactNode }) {
       const result = await Notification.requestPermission();
       setPermission(result as Permission);
       if (result === 'granted') setNotificationsEnabled(true);
+    } catch { /* ignore */ }
+  }
+
+  /**
+   * Se llama al crear un recordatorio: pide permiso si hace falta y dispara una
+   * notificación de confirmación con cuándo avisará. La notificación puntual a
+   * la hora la agenda el efecto de abajo (con la app abierta).
+   */
+  async function announceCreated(reminder: Reminder) {
+    if (typeof Notification === 'undefined') return;
+    let perm = permission;
+    let enabled = notificationsEnabled;
+    if (perm === 'default') {
+      try {
+        perm = (await Notification.requestPermission()) as Permission;
+        setPermission(perm);
+        if (perm === 'granted') { setNotificationsEnabled(true); enabled = true; }
+      } catch { /* ignore */ }
+    }
+    if (perm !== 'granted' || !enabled) return;
+
+    const t = isoNow();
+    const next = nextOccurrence(reminder, t);
+    let when = '';
+    if (next === t) when = reminder.remind_time ? `hoy a las ${formatTimeShort(reminder.remind_time)}` : 'hoy';
+    else if (next) when = `${formatDateShort(next)}${reminder.remind_time ? ` · ${formatTimeShort(reminder.remind_time)}` : ''}`;
+    try {
+      new Notification('Recordatorio creado', {
+        body: when ? `${reminder.title} — ${when}` : reminder.title,
+        icon: '/icon-192.png',
+        tag: `created-${reminder.id}`,
+      });
     } catch { /* ignore */ }
   }
 
@@ -135,6 +169,7 @@ export function ReminderCenterProvider({ children }: { children: ReactNode }) {
     notificationsEnabled,
     setNotificationsEnabled,
     requestPermission,
+    announceCreated,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -23,14 +23,21 @@ create table if not exists public.workout_routines (
   user_id     uuid not null references auth.users(id) on delete cascade,
   name        text not null check (char_length(trim(name)) > 0),
   description text,
-  -- fullbody | ppl | upper_lower | beginner | custom
-  type        text not null default 'custom' check (type in ('fullbody','ppl','upper_lower','beginner','custom')),
+  -- fullbody | ppl | upper_lower | beginner | strength | home | split | custom
+  type        text not null default 'custom' check (type in ('fullbody','ppl','upper_lower','beginner','strength','home','split','custom')),
   is_active   boolean not null default false,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
 create index if not exists idx_routines_user on public.workout_routines(user_id);
 create index if not exists idx_routines_user_active on public.workout_routines(user_id, is_active);
+
+-- Si la tabla ya existía con la lista de tipos anterior, ampliamos el CHECK.
+-- (Postgres nombra el check inline como <tabla>_<columna>_check, así que el
+-- drop-if-exists lo encuentra y esto queda idempotente.)
+alter table public.workout_routines drop constraint if exists workout_routines_type_check;
+alter table public.workout_routines add constraint workout_routines_type_check
+  check (type in ('fullbody','ppl','upper_lower','beginner','strength','home','split','custom'));
 
 -- Un día dentro de una rutina (p.ej. "Push", "Lunes", "Tren superior").
 -- weekday: 0=domingo … 6=sábado, opcional (para calendario/planificación).

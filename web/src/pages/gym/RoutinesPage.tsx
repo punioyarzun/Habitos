@@ -2,17 +2,23 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Check, Copy, Trash2, Pencil, MoreVertical, Star } from 'lucide-react';
 import { useRoutines } from '../../hooks/useRoutines';
+import { gymService } from '../../services/gymService';
+import type { RoutineType } from '../../types/domain';
 import { EmptyState, Skeleton } from '../../components/ui/primitives';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { ROUTINE_PRESETS } from '../../utils/routinePresets';
 import { ROUTINE_TYPE_LABELS } from '../../features/gym/gymConstants';
 
+const CUSTOM_TYPES: RoutineType[] = ['custom', 'fullbody', 'ppl', 'upper_lower', 'beginner', 'strength', 'home', 'split'];
+
 export function RoutinesPage() {
   const navigate = useNavigate();
   const { routines, loading, createBlank, createFromPreset, duplicate, remove, setActive } = useRoutines();
   const [showCreate, setShowCreate] = useState(false);
   const [customName, setCustomName] = useState('');
+  const [customType, setCustomType] = useState<RoutineType>('custom');
+  const [customDays, setCustomDays] = useState(3);
   const [busy, setBusy] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -29,9 +35,17 @@ export function RoutinesPage() {
   async function handleBlank() {
     if (!customName.trim()) return;
     setBusy(true);
-    const r = await createBlank(customName.trim(), 'custom');
+    const r = await createBlank(customName.trim(), customType);
+    if (r && customDays > 0) {
+      // Pre-crea N días de entrenamiento vacíos para no partir de cero.
+      try {
+        for (let i = 0; i < customDays; i++) {
+          await gymService.addDay(r.id, { name: `Día ${i + 1}`, weekday: null, is_rest: false, sort_order: i });
+        }
+      } catch { /* el editor igual permite agregar días */ }
+    }
     setBusy(false);
-    if (r) { setShowCreate(false); setCustomName(''); navigate(`/gimnasio/rutinas/${r.id}`); }
+    if (r) { setShowCreate(false); setCustomName(''); setCustomType('custom'); setCustomDays(3); navigate(`/gimnasio/rutinas/${r.id}`); }
   }
 
   return (
@@ -104,16 +118,28 @@ export function RoutinesPage() {
 
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Personalizada</p>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <input
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleBlank(); }}
                 maxLength={80}
                 placeholder="Nombre de tu rutina"
-                className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
               />
-              <Button onClick={handleBlank} loading={busy} disabled={!customName.trim()}>Crear</Button>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-xs font-medium text-[var(--text-muted)]">Tipo
+                  <select value={customType} onChange={(e) => setCustomType(e.target.value as RoutineType)} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
+                    {CUSTOM_TYPES.map((t) => <option key={t} value={t}>{ROUTINE_TYPE_LABELS[t]}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-[var(--text-muted)]">Días de entrenamiento
+                  <select value={customDays} onChange={(e) => setCustomDays(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm">
+                    {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n} {n === 1 ? 'día' : 'días'}</option>)}
+                  </select>
+                </label>
+              </div>
+              <Button onClick={handleBlank} loading={busy} disabled={!customName.trim()} className="w-full">Crear rutina</Button>
             </div>
           </div>
         </div>

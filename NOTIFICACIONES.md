@@ -29,6 +29,31 @@ de verdad, y lo que no existe está documentado como paso futuro, no fingido.
 - Preferencia guardada en `localStorage` (`bitacora:notifications`) para poder apagarlas
   sin revocar el permiso del navegador.
 
+### 4. Aviso al crear un recordatorio
+- Al crear un recordatorio, `reminderCenter.announceCreated()` pide el permiso del
+  navegador si aún no se dio y dispara una **notificación de confirmación** con el
+  título y cuándo avisará ("hoy a las 10:00", "5 sept · 09:00"). La notificación
+  puntual a la hora exacta la agenda el scheduler de arriba (con la app abierta).
+
+## Email de recordatorios (opcional — requiere backend)
+
+Enviar un correo al crear un recordatorio (o a su hora) **no se puede hacer solo desde
+el navegador**: hace falta un servidor que envíe el email. No se dejó ninguna simulación.
+El camino real, listo para implementar:
+
+1. Proveedor de email transaccional (p. ej. **Resend**, SendGrid o el SMTP de Supabase)
+   con una API key guardada como secreto en Supabase.
+2. Una **Supabase Edge Function** `send-reminder-email` que reciba el recordatorio y
+   mande el correo con la librería del proveedor. El cliente ya tiene el `email` del
+   usuario en la sesión.
+3. Para el envío a la hora exacta (no solo al crear), un **cron** (Supabase Scheduled
+   Functions / pg_cron) que corra cada X minutos, calcule con `occursOn()` qué
+   recordatorios vencen y dispare los correos.
+4. Ajustar la CSP/`connect-src` si el cliente llamara directo a la función.
+
+Mientras no exista ese backend, la app cubre el requisito con la **notificación del
+navegador** (el "o me indique alguna notificación" del pedido).
+
 ## Qué NO está implementado (y por qué)
 
 ### Push en segundo plano (app cerrada)

@@ -5,6 +5,9 @@ export const ROUTINE_TYPE_LABELS: Record<RoutineType, string> = {
   ppl: 'Push Pull Legs',
   upper_lower: 'Superior / Inferior',
   beginner: 'Principiante',
+  strength: 'Fuerza',
+  home: 'En casa',
+  split: 'Split',
   custom: 'Personalizada',
 };
 

@@ -69,7 +69,7 @@ export interface HabitWithStats extends Habit {
 // ===========================================================================
 // GIMNASIO
 // ===========================================================================
-export type RoutineType = 'fullbody' | 'ppl' | 'upper_lower' | 'beginner' | 'custom';
+export type RoutineType = 'fullbody' | 'ppl' | 'upper_lower' | 'beginner' | 'strength' | 'home' | 'split' | 'custom';
 
 export interface WorkoutRoutine {
   id: string;
