@@ -3,8 +3,9 @@ import { useHabits } from '../hooks/useHabits';
 import { useTransactions } from '../hooks/useTransactions';
 import { useAuth } from '../hooks/useAuth';
 import { HabitCard } from '../features/habits/HabitCard';
-import { EmptyState, Skeleton, StatCard, ProgressBar } from '../components/ui/primitives';
-import { Sparkles, Flame, Wallet, CircleCheck, TrendingUp } from 'lucide-react';
+import { DailyGoalRing } from '../features/habits/DailyGoalRing';
+import { EmptyState, Skeleton, StatCard } from '../components/ui/primitives';
+import { Sparkles, Flame, Wallet, ListChecks } from 'lucide-react';
 import { formatCLP } from '../utils/currency';
 import { formatDayLabel, todayIso } from '../utils/dates';
 
@@ -17,7 +18,6 @@ export function DashboardPage() {
 
   const doneCount = activeHabits.filter((h) => h.doneToday).length;
   const total = activeHabits.length;
-  const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const bestStreak = activeHabits.reduce((max, h) => Math.max(max, h.currentStreak), 0);
   const name = user?.email?.split('@')[0] ?? '';
 
@@ -28,26 +28,19 @@ export function DashboardPage() {
         <p className="mt-0.5 text-sm capitalize text-[var(--text-muted)]">{formatDayLabel(today)}</p>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard accent icon={<CircleCheck size={18} strokeWidth={2} />} value={`${doneCount}/${total}`} label="Hábitos hoy" />
-        <StatCard icon={<TrendingUp size={17} strokeWidth={2} className="text-[var(--text-muted)]" />} value={`${pct}%`} label="Progreso de hoy" />
-        <StatCard icon={<Flame size={18} strokeWidth={2} className="text-[var(--color-brand-text)]" />} value={bestStreak} label="Mejor racha activa" />
+      <div className="mt-5">
+        <DailyGoalRing done={doneCount} total={total} streak={bestStreak} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <StatCard icon={<Flame size={18} strokeWidth={2} className="text-[var(--color-brand-text)]" />} value={bestStreak} label="Mejor racha" />
+        <StatCard icon={<ListChecks size={17} strokeWidth={2} className="text-[var(--text-muted)]" />} value={total} label="Hábitos activos" />
         <StatCard
           icon={<Wallet size={16} strokeWidth={2} className="text-[var(--text-muted)]" />}
           value={<span className={summary.balance >= 0 ? 'text-[var(--color-money-in-text)]' : 'text-[var(--color-money-out-text)]'}>{loadingTx ? '···' : formatCLP(summary.balance)}</span>}
-          label="Balance del mes"
+          label="Balance"
         />
       </div>
-
-      {total > 0 && (
-        <div className="card mt-3 p-4">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-medium">Progreso de hoy</span>
-            <span className="text-[var(--text-muted)]">{doneCount} de {total} completados</span>
-          </div>
-          <ProgressBar pct={pct} />
-        </div>
-      )}
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="font-display text-base font-semibold">Hoy</h2>

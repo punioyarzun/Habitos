@@ -5,6 +5,7 @@ import { habitCategoriesService, type HabitCategory } from '../services/habitCat
 import type { Habit, HabitCompletion, HabitWithStats } from '../types/domain';
 import { computeHabitStats, isoNow } from '../utils/streaks';
 import { addDays } from '../utils/dates';
+import { haptic } from '../utils/celebrate';
 import { useToast } from './useToast';
 
 const HISTORY_DAYS = 400; // suficiente para racha/mejor racha sin traer todo el historial
@@ -77,6 +78,7 @@ export function useHabits() {
   async function toggleToday(habitId: string) {
     const today = isoNow();
     const already = completions.some((c) => c.habit_id === habitId && c.completed_date === today);
+    if (!already) haptic(25); // feedback háptico al marcar como hecho
     // Optimista: actualiza UI antes de esperar la red.
     setCompletions((prev) =>
       already
