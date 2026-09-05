@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { HabitCard } from '../features/habits/HabitCard';
 import { DailyGoalRing } from '../features/habits/DailyGoalRing';
 import { EmptyState, Skeleton, StatCard } from '../components/ui/primitives';
-import { Sparkles, Flame, Wallet, ListChecks } from 'lucide-react';
+import { Sparkles, Flame, Wallet, ListChecks, Target } from 'lucide-react';
 import { formatCLP } from '../utils/currency';
 import { formatDayLabel, todayIso } from '../utils/dates';
 
@@ -44,7 +44,10 @@ export function DashboardPage() {
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="font-display text-base font-semibold">Hoy</h2>
-        <Link to="/habitos" className="text-xs font-medium text-[var(--color-brand-text)] hover:underline">Ver todos →</Link>
+        <div className="flex items-center gap-3">
+          <Link to="/enfoque" className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-brand-text)] hover:underline"><Target size={13} strokeWidth={2} /> Modo foco</Link>
+          <Link to="/habitos" className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:underline">Ver todos →</Link>
+        </div>
       </div>
 
       <div className="mt-3">

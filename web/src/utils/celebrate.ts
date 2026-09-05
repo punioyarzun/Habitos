@@ -34,3 +34,36 @@ export function celebrate(): void {
 export function haptic(pattern: number | number[] = 25): void {
   try { navigator.vibrate?.(pattern); } catch { /* ignore */ }
 }
+
+// ---- Sonido opcional al completar ----
+const SOUND_KEY = 'bitacora:sound';
+export function soundEnabled(): boolean {
+  try { return localStorage.getItem(SOUND_KEY) === 'on'; } catch { return false; }
+}
+export function setSoundEnabled(v: boolean): void {
+  try { localStorage.setItem(SOUND_KEY, v ? 'on' : 'off'); } catch { /* ignore */ }
+}
+
+/** Campanita corta de dos notas al completar (solo si el sonido está activado). */
+export function playChime(): void {
+  if (!soundEnabled()) return;
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    [[880, 0], [1174.7, 0.12]].forEach(([freq, offset]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, now + offset);
+      g.gain.exponentialRampToValueAtTime(0.18, now + offset + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.25);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(now + offset);
+      o.stop(now + offset + 0.28);
+    });
+    setTimeout(() => { try { ctx.close(); } catch { /* ignore */ } }, 700);
+  } catch { /* ignore */ }
+}

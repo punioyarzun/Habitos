@@ -12,6 +12,8 @@ import { CalendarPage } from './pages/CalendarPage';
 import { FinancePage } from './pages/FinancePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RemindersPage } from './pages/RemindersPage';
+import { AchievementsPage } from './pages/AchievementsPage';
+import { FocusPage } from './pages/FocusPage';
 import { GymPage } from './pages/GymPage';
 import { GymDashboardPage } from './pages/gym/GymDashboardPage';
 import { RoutinesPage } from './pages/gym/RoutinesPage';
@@ -62,6 +64,8 @@ export default function App() {
         <Route index element={<DashboardPage />} />
         <Route path="habitos" element={<HabitsPage />} />
         <Route path="calendario" element={<CalendarPage />} />
+        <Route path="enfoque" element={<FocusPage />} />
+        <Route path="logros" element={<AchievementsPage />} />
         <Route path="finanzas" element={<FinancePage />} />
         <Route path="estadisticas" element={<Suspense fallback={<PageFallback />}><StatisticsPage /></Suspense>} />
 

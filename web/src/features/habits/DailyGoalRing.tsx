@@ -1,20 +1,12 @@
-import { useEffect, useRef } from 'react';
 import { Flame, PartyPopper, Sunrise } from 'lucide-react';
 import { ProgressRing } from '../../components/ui/primitives';
-import { celebrate } from '../../utils/celebrate';
 
 /** Hero del día: un anillo grande con el progreso de hoy (estilo Streaks /
- *  Apple Activity). Lanza confeti la primera vez que llegas al 100%. */
+ *  Apple Activity). El confeti al llegar al 100% lo dispara toggleToday. */
 export function DailyGoalRing({ done, total, streak }: { done: number; total: number; streak: number }) {
   const pct = total > 0 ? done / total : 0;
   const complete = total > 0 && done >= total;
   const remaining = Math.max(0, total - done);
-  const wasComplete = useRef(complete);
-
-  useEffect(() => {
-    if (complete && !wasComplete.current) celebrate();
-    wasComplete.current = complete;
-  }, [complete]);
 
   const ringColor = complete ? 'var(--color-money-in)' : 'var(--color-brand-500)';
   let title: string;

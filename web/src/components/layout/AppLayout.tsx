@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import {
   LayoutGrid, CheckCircle2, CalendarDays, Wallet, BarChart3, Settings, LogOut, Sun, Moon,
-  Dumbbell, AlarmClock, MoreHorizontal, X,
+  Dumbbell, AlarmClock, MoreHorizontal, X, Award,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/gimnasio', label: 'Gimnasio', Icon: Dumbbell },
   { to: '/recordatorios', label: 'Recordatorios', Icon: AlarmClock },
   { to: '/finanzas', label: 'Finanzas', Icon: Wallet },
+  { to: '/logros', label: 'Logros', Icon: Award },
   { to: '/estadisticas', label: 'Estadísticas', Icon: BarChart3 },
   { to: '/configuracion', label: 'Configuración', Icon: Settings },
 ];

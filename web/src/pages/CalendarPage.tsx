@@ -132,6 +132,7 @@ export function CalendarPage() {
                     );
                   })}
                 </div>
+                <div className="w-9 shrink-0 self-end pb-1 text-center text-[10px] font-medium text-[var(--text-faint)]">Racha</div>
               </div>
 
               {/* Filas de hábitos con checkboxes */}
@@ -165,6 +166,9 @@ export function CalendarPage() {
                         );
                       })}
                     </div>
+                    <div className="flex w-9 shrink-0 items-center justify-center gap-0.5 text-xs font-semibold" style={{ color: h.currentStreak > 0 ? 'var(--color-brand-text)' : 'var(--text-faint)' }}>
+                      <Flame size={12} strokeWidth={2} className={h.currentStreak > 0 ? 'animate-flame' : ''} />{h.currentStreak}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -183,6 +187,7 @@ export function CalendarPage() {
                     );
                   })}
                 </div>
+                <div className="w-9 shrink-0" />
               </div>
             </div>
           </Card>

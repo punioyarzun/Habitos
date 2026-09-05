@@ -1,14 +1,17 @@
-import { Sun, Moon, Bell, BellOff } from 'lucide-react';
+import { useState } from 'react';
+import { Sun, Moon, Bell, BellOff, Volume2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useReminderCenter } from '../hooks/reminderCenter';
 import { Card } from '../components/ui/primitives';
 import { Button } from '../components/ui/Button';
+import { soundEnabled as getSound, setSoundEnabled as saveSound, playChime } from '../utils/celebrate';
 
 export function SettingsPage() {
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const { permission, notificationsEnabled, setNotificationsEnabled, requestPermission, emailRemindersEnabled, setEmailRemindersEnabled } = useReminderCenter();
+  const [sound, setSound] = useState(getSound());
 
   return (
     <div className="mx-auto max-w-lg">
@@ -73,6 +76,21 @@ export function SettingsPage() {
             <Sun size={15} strokeWidth={2} /> Claro
           </button>
         </div>
+      </Card>
+
+      <Card className="mt-3 p-4">
+        <p className="mb-1 flex items-center gap-2 text-sm font-medium"><Volume2 size={15} strokeWidth={2} /> Experiencia</p>
+        <label className="flex items-center justify-between gap-3">
+          <span className="text-sm text-[var(--text-muted)]">Sonido al completar un hábito.</span>
+          <button
+            onClick={() => { const v = !sound; setSound(v); saveSound(v); if (v) playChime(); }}
+            role="switch"
+            aria-checked={sound}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${sound ? 'bg-brand-500' : 'bg-[var(--surface-2)]'}`}
+          >
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${sound ? 'translate-x-5' : 'translate-x-0.5'}`} />
+          </button>
+        </label>
       </Card>
 
       <Card className="mt-3 p-4">
