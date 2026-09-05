@@ -42,7 +42,7 @@ export function FocusPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 py-4 sm:grid-cols-3">
             {pending.map((h) => (
-              <div key={h.id} className="animate-pop-in">
+              <div key={h.id} className="min-w-0 animate-pop-in">
                 <HabitTile habit={h} onToggle={toggleToday} size={104} />
               </div>
             ))}

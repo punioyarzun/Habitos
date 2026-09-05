@@ -13,7 +13,7 @@ export function HabitTile({ habit, onToggle, size = 88 }: { habit: HabitWithStat
     <button
       onClick={() => onToggle(habit.id)}
       aria-pressed={done}
-      className="group flex flex-col items-center gap-2 rounded-xl p-1.5 transition-transform active:scale-95"
+      className="group flex w-full min-w-0 flex-col items-center gap-2 rounded-xl p-1.5 transition-transform active:scale-95"
       title={done ? 'Hecho hoy — toca para desmarcar' : 'Marcar como hecho hoy'}
     >
       <ProgressRing pct={ringPct} size={size} stroke={6} color={habit.color}>
@@ -30,8 +30,8 @@ export function HabitTile({ habit, onToggle, size = 88 }: { habit: HabitWithStat
         </span>
       </ProgressRing>
 
-      <div className="w-full text-center">
-        <p className="truncate text-xs font-medium text-[var(--text)]">{habit.name}</p>
+      <div className="w-full min-w-0 text-center">
+        <p className="w-full truncate text-xs font-medium text-[var(--text)]">{habit.name}</p>
         <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-[var(--text-muted)]">
           <Flame size={11} strokeWidth={2} className={habit.currentStreak > 0 ? 'text-[var(--color-brand-text)]' : ''} />
           {habit.currentStreak}
