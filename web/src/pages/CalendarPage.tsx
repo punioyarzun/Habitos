@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { CalendarPlus, Check, Flame, CalendarCheck } from 'lucide-react';
 import { useHabits } from '../hooks/useHabits';
 import { completionsService } from '../services/completionsService';
-import { Card, EmptyState, StatCard } from '../components/ui/primitives';
+import { Card, EmptyState, StatCard, ProgressRing } from '../components/ui/primitives';
 import { Tabs } from '../components/ui/Tabs';
 import { MonthNav } from '../components/ui/MonthNav';
 import { toIsoDate, todayIso, formatDayLabel, addDays } from '../utils/dates';
@@ -211,32 +211,38 @@ export function CalendarPage() {
             <StatCard icon={<Flame size={17} strokeWidth={2} className="text-[var(--color-brand-text)]" />} value={bestStreak} label="Mejor racha" />
           </div>
 
-          <Card className="p-4">
-            <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-medium text-[var(--text-faint)]">
+          <Card className="p-3 sm:p-4">
+            <div className="grid grid-cols-7 text-center text-[11px] font-medium text-[var(--text-faint)]">
               {DOW.map((d, i) => <div key={i}>{d}</div>)}
             </div>
-            <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+            <div className="mt-1 grid grid-cols-7 gap-y-1">
               {monthCells().map((iso, i) => {
                 if (!iso) return <div key={`empty-${i}`} />;
                 const s = dayStats(iso);
                 const isToday = iso === today;
                 const isSel = iso === selected;
+                const future = iso > today;
+                const ringColor = s.perfect ? 'var(--color-money-in)' : 'var(--color-brand-500)';
+                const numClass = isToday
+                  ? 'font-bold text-[var(--color-brand-text)]'
+                  : s.done > 0 ? 'font-semibold text-[var(--text)]' : future ? 'text-[var(--text-faint)]' : 'text-[var(--text-muted)]';
                 return (
                   <button
                     key={iso}
                     onClick={() => setSelected(iso)}
-                    className={`relative grid aspect-square place-items-center rounded-lg text-xs font-medium transition-transform hover:scale-105 ${isToday ? 'ring-2 ring-brand-500' : ''} ${isSel && !isToday ? 'ring-2 ring-[var(--color-brand-text)]' : ''}`}
-                    style={{
-                      background: s.done > 0 ? `color-mix(in srgb, var(--color-brand-500) ${Math.round(20 + s.pct * 80)}%, var(--surface-2))` : 'var(--surface-2)',
-                      color: s.pct > 0.45 ? '#fff' : 'var(--text-muted)',
-                    }}
+                    className={`mx-auto grid place-items-center rounded-full p-0.5 transition-transform hover:scale-110 ${isSel ? 'ring-2 ring-[var(--color-brand-text)]' : ''}`}
                     title={`${s.done}/${s.total} hábitos`}
                   >
-                    {Number(iso.slice(-2))}
-                    {s.perfect && <span className="absolute bottom-1 right-1 grid h-3 w-3 place-items-center rounded-full bg-white/90"><Check size={9} strokeWidth={3} className="text-[var(--color-brand-600)]" /></span>}
+                    <ProgressRing pct={s.pct} size={38} stroke={3} color={ringColor}>
+                      <span className={`text-[11px] tabular-nums ${numClass}`}>{Number(iso.slice(-2))}</span>
+                    </ProgressRing>
                   </button>
                 );
               })}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-muted)]">
+              <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: 'var(--color-brand-500)' }} /> Progreso del día</span>
+              <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: 'var(--color-money-in)' }} /> Día perfecto</span>
             </div>
           </Card>
 

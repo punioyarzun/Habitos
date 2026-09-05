@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useHabits } from '../hooks/useHabits';
 import { useTransactions } from '../hooks/useTransactions';
 import { useAuth } from '../hooks/useAuth';
-import { HabitCard } from '../features/habits/HabitCard';
+import { HabitTile } from '../features/habits/HabitTile';
 import { DailyGoalRing } from '../features/habits/DailyGoalRing';
 import { EmptyState, Skeleton, StatCard } from '../components/ui/primitives';
 import { Sparkles, Flame, Wallet, ListChecks, Target } from 'lucide-react';
@@ -11,7 +11,7 @@ import { formatDayLabel, todayIso } from '../utils/dates';
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const { activeHabits, loading, toggleToday, categoryNameById } = useHabits();
+  const { activeHabits, loading, toggleToday } = useHabits();
   const now = new Date();
   const { summary, loading: loadingTx } = useTransactions(now.getFullYear(), now.getMonth());
   const today = todayIso();
@@ -52,7 +52,9 @@ export function DashboardPage() {
 
       <div className="mt-3">
         {loading ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Skeleton className="h-36" /><Skeleton className="h-36" /></div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            <Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" />
+          </div>
         ) : activeHabits.length === 0 ? (
           <EmptyState
             icon={<Sparkles size={26} strokeWidth={1.5} />}
@@ -61,9 +63,9 @@ export function DashboardPage() {
             action={<Link to="/habitos" className="text-sm font-medium text-[var(--color-brand-text)] hover:underline">Crear hábito →</Link>}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {activeHabits.map((h) => (
-              <HabitCard key={h.id} habit={h} onToggleToday={toggleToday} categoryName={h.category_id ? categoryNameById.get(h.category_id) : undefined} />
+              <HabitTile key={h.id} habit={h} onToggle={toggleToday} />
             ))}
           </div>
         )}
