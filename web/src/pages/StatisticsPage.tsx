@@ -21,7 +21,7 @@ const PERIODS: { key: Period; label: string; days: number }[] = [
   { key: '1y', label: '1 año', days: 365 },
 ];
 
-const PIE_COLORS = ['#c9564f', '#c98a2e', '#6f8fae', '#8b7bb0', '#4f9d6e', '#b9713f', '#7a9aa8', '#a874a8'];
+const PIE_COLORS = ['#6366f1', '#0ea5e9', '#14b8a6', '#10b981', '#f59e0b', '#f43f5e', '#ec4899', '#8b5cf6'];
 
 export function StatisticsPage() {
   const [period, setPeriod] = useState<Period>('3m');

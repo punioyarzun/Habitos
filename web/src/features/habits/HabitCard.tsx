@@ -35,7 +35,7 @@ export function HabitCard({ habit, onToggleToday, onOpenMenu, categoryName }: Pr
         >
           <ProgressRing pct={habit.completionRate30d} color={habit.color} size={52} stroke={3}>
             <span
-              className="grid h-10 w-10 place-items-center rounded-full transition-colors"
+              className={`grid h-10 w-10 place-items-center rounded-full transition-colors ${habit.doneToday ? 'animate-pop' : ''}`}
               style={{
                 background: habit.doneToday ? habit.color : `color-mix(in srgb, ${habit.color} 14%, transparent)`,
                 color: habit.doneToday ? '#fff' : habit.color,

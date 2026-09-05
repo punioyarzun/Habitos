@@ -1,5 +1,38 @@
 # CHANGELOG — pase de optimización a producción
 
+## Fase 4 — Rediseño moderno + experiencia estilo Streaks
+
+Rediseño integral del frontend a una estética moderna/minimalista (SaaS) y una
+capa de interacción "viva" inspirada en Streaks / Apple Activity.
+
+### Identidad visual
+- Paleta grafito/slate con acento índigo (antes ámbar/cuero); semánticos verde/rojo
+  modernos. Todo vía tokens CSS, se propaga a toda la app.
+- **Sin emojis**: iconografía unificada de línea (lucide). `HabitIcon` migra en
+  caliente los emojis antiguos de hábitos ya creados a íconos de línea.
+- Login rediseñado (split-screen SaaS, solo Google), reset de contraseña acorde,
+  modal como bottom-sheet en móvil, `MonthNav` unificado con chevrons.
+
+### Calendario (prioridad)
+- Vista **Semana** (matriz hábitos × 7 días con checkboxes, totales y racha por
+  fila) + vista **Mes** (mapa de calor con resumen y días perfectos).
+
+### Experiencia viva (Streaks)
+- **Anillo del día** en el Inicio con confeti al 100%; **háptico + sonido opcional**
+  al completar (centralizados en `toggleToday`).
+- Hábitos: vista **Aros** (anillos grandes tipo Streaks) además de Tarjetas.
+- **Logros** (`/logros`) derivados de tus datos; **Modo foco** (`/enfoque`) con los
+  aros pendientes de hoy.
+
+### Gimnasio y Recordatorios
+- Temporizador de descanso con cuenta regresiva, sonido/vibración al llegar a 0 y
+  2 min automáticos entre ejercicios; más plantillas de rutina.
+- Recordatorios: notificación al crear + backend de email opcional
+  (`supabase/functions/send-reminder-email`, ver `NOTIFICACIONES.md`).
+
+Compuertas: tsc/build/lint OK, 31/31 tests. Verificado en navegador (móvil y desktop,
+ambos temas).
+
 ## Fase 3 — Nuevos módulos: Gimnasio + Recordatorios
 
 Expansión de la plataforma de "hábitos + finanzas" a un ecosistema personal completo,
